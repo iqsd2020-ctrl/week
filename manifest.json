@@ -8,21 +8,8 @@
   "theme_color": "#FFFFFF",
   "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "https://i.imgur.com/Ra9c5H4.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "https://i.imgur.com/Ra9c5H4.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    },
-    {
-      "src": "https://i.imgur.com/Ra9c5H4.png",
-      "type": "image/png",
-      "sizes": "1024x1024",
-      "purpose": "maskable"
-    }
+    { "src": "https://i.imgur.com/Ra9c5H4.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "https://i.imgur.com/Ra9c5H4.png", "type": "image/png", "sizes": "512x512" },
+    { "src": "https://i.imgur.com/Ra9c5H4.png", "type": "image/png", "sizes": "1024x1024", "purpose": "maskable" }
   ]
 }

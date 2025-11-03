@@ -1,494 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أعمال الأيام</title>
-    
-    <!-- === إضافات PWA (Progressive Web App) === -->
-    
-    <!-- 1. ربط ملف الـ Manifest -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- 2. أيقونة التطبيق (للأجهزة مثل آبل) -->
-    <link rel="apple-touch-icon" href="https://i.imgur.com/Ra9c5H4.png">
-    
-    <!-- 3. لون شريط العنوان في المتصفح -->
-    <meta name="theme-color" content="#FFFFFF">
-    
-    <!-- ========================================== -->
-
-    <!-- تحميل Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- تحميل خط Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
-    <style>
-        /* تطبيق الخط الافتراضي وتعيين الخلفية */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-image: url('https://t4.ftcdn.net/jpg/03/16/11/27/360_F_316112727_rFEKzIJCAU0iAqUVvp8NbHjVzUAwy5gg.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }
-        /* إضافة ظل نص لجعله أكثر بروزاً */
-        .text-glow {
-            text-shadow: 0 0 8px rgba(255, 255, 255, 0.6), 0 0 15px rgba(255, 255, 255, 0.3);
-        }
-
-        /* تخصيص ستايل شريط مشغل الصوت */
-        audio::-webkit-media-controls-panel {
-            background-color: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(4px);
-            border-radius: 0.5rem;
-        }
-        audio {
-            border-radius: 0.5rem;
-        }
-
-        /* إخفاء النافذة المنبثقة افتراضياً */
-        #daily-modal-backdrop {
-            display: none;
-        }
-    </style>
-</head>
-<body class="antialiased text-black">
-
-    <!-- === النافذة المنبثقة للملاحظة اليومية === -->
-    <div id="daily-modal-backdrop" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm">
-        <div id="daily-modal-content" class="w-full max-w-md p-6 bg-white/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 text-center space-y-4">
-            <h3 class="text-xl font-bold text-blue-800">ملاحظة هامة</h3>
-            <p class="text-base font-medium text-gray-800 leading-relaxed">
-                يبدأ اليوم الشرعي ( ليلاً ثم نهاراً). إذا كنت مضطراً لفعل أمرٍ منهي عنه او لم ينصح القيام بفعله فعليك التصدق أولاً مع الاستغفار وقراءة آية الكرسي باستمرار.
-            </p>
-            <button id="close-modal-btn" class="w-full px-4 py-3 font-semibold text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all">
-                إغلاق
-            </button>
-        </div>
-    </div>
-    <!-- ======================================== -->
-
-
-    <!-- حاوية رئيسية لتوسيط اللوح الزجاجي (واجهة اختيار الأيام) -->
-    <div id="main-container" class="min-h-screen w-full flex items-center justify-center p-4">
-
-        <!-- تعديل: زيادة max-w-md لاستيعاب الأيقونات الأكبر -->
-        <div class="w-full max-w-md p-8 space-y-8 bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10">
-            
-            <h2 class="text-3xl font-bold text-center text-black">
-                أعمال الأيام
-            </h2>
-
-            <!-- تعديل: زيادة gap-6 و w-24 h-24 و text-lg لجعل الأيقونات أوضح -->
-            <div class="flex flex-wrap justify-center gap-6 text-center">
-
-                <!-- كل يوم من أيام الأسبوع -->
-                <div class="flex flex-col items-center group cursor-pointer w-24 day-button" data-day="الجمعة">
-                    <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center border border-white/20 transition-all duration-300 group-hover:bg-white/20 group-hover:scale-105">
-                        <span class="text-lg font-semibold text-black">الجمعة</span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col items-center group cursor-pointer w-24 day-button" data-day="السبت">
-                    <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center border border-white/20 transition-all duration-300 group-hover:bg-white/20 group-hover:scale-105">
-                        <span class="text-lg font-semibold text-black">السبت</span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col items-center group cursor-pointer w-24 day-button" data-day="الأحد">
-                    <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center border border-white/20 transition-all duration-300 group-hover:bg-white/20 group-hover:scale-105">
-                        <span class="text-lg font-semibold text-black">الأحد</span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col items-center group cursor-pointer w-24 day-button" data-day="الاثنين">
-                    <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center border border-white/20 transition-all duration-300 group-hover:bg-white/20 group-hover:scale-105">
-                        <span class="text-lg font-semibold text-black">الاثنين</span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col items-center group cursor-pointer w-24 day-button" data-day="الثلاثاء">
-                    <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center border border-white/20 transition-all duration-300 group-hover:bg-white/20 group-hover:scale-105">
-                        <span class="text-lg font-semibold text-black">الثلاثاء</span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col items-center group cursor-pointer w-24 day-button" data-day="الأربعاء">
-                    <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center border border-white/20 transition-all duration-300 group-hover:bg-white/20 group-hover:scale-105">
-                        <span class="text-lg font-semibold text-black">الأربعاء</span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col items-center group cursor-pointer w-24 day-button" data-day="الخميس">
-                    <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center border border-white/20 transition-all duration-300 group-hover:bg-white/20 group-hover:scale-105">
-                        <span class="text-lg font-semibold text-black">الخميس</span>
-                    </div>
-                </div>
-
-            </div>
-            
-        </div> <!-- نهاية اللوح الزجاجي -->
-    </div>
-
-    <!-- حاوية الصفحة الكاملة (مخفية افتراضياً) -->
-    <div id="day-page-container" class="min-h-screen w-full flex items-center justify-center p-4 hidden">
-        <div class="w-full max-w-4xl p-8 space-y-6 bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10">
-            
-            <button id="back-button" class="mb-4 text-black bg-black/10 px-4 py-2 rounded-lg hover:bg-black/20 transition-all">&larr; رجوع</button>
-            <h2 id="page-title" class="text-3xl font-bold text-center text-black"></h2>
-            
-            <!-- تغيير: إضافة overflow-y-auto و max-h-[70vh] للسماح بالتمرير داخل المحتوى الطويل -->
-            <div id="page-content" class="mt-6 text-center min-h-[200px] max-h-[70vh] overflow-y-auto p-4 rounded-lg bg-white/50">
-                <!-- المحتوى سيتم حقنه هنا بواسطة JS -->
-            </div>
-        </div>
-    </div>
-
-
-    <script>
-        // --- تسجيل Service Worker (للتثبيت والعمل اوفلاين) ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered successfully:', registration);
-                    })
-                    .catch(error => {
-                        console.log('Service Worker registration failed:', error);
-                    });
-            });
-        }
-        // --- نهاية تسجيل Service Worker ---
-
-
-        // --- منطق النافذة المنبثقة اليومية ---
-        const modalBackdrop = document.getElementById('daily-modal-backdrop');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        
-        const today = new Date().toDateString(); // يحصل على التاريخ بصيغة "Mon Nov 03 2025"
-        const lastShownDate = localStorage.getItem('lastModalShownDate');
-
-        if (lastShownDate !== today) {
-            // إظهار النافذة إذا كان التاريخ مختلفاً أو أول مرة
-            modalBackdrop.style.display = 'flex';
-            
-            // تخزين تاريخ اليوم
-            localStorage.setItem('lastModalShownDate', today);
-        }
-
-        // إغلاق النافذة عند الضغط على الزر
-        closeModalBtn.addEventListener('click', () => {
-            modalBackdrop.style.display = 'none';
-        });
-
-        // إغلاق النافذة عند الضغط خارج المحتوى (على الخلفية)
-        modalBackdrop.addEventListener('click', (e) => {
-            if (e.target === modalBackdrop) {
-                modalBackdrop.style.display = 'none';
-            }
-        });
-        // --- نهاية منطق النافذة المنبثقة ---
-
-
-        // جلب العناصر من الـ DOM
-        const dayButtons = document.querySelectorAll('.day-button');
-        const mainContainer = document.getElementById('main-container');
-        const dayPageContainer = document.getElementById('day-page-container');
-        const backButton = document.getElementById('back-button');
-        const pageTitle = document.getElementById('page-title');
-        const pageContent = document.getElementById('page-content');
-
-        // --- منطق تمييز اليوم الحالي ---
-        const dayMap = [
-            "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"
-        ];
-        
-        try {
-            const todayIndex = new Date().getDay();
-            const todayArabic = dayMap[todayIndex];
-
-            dayButtons.forEach(button => {
-                const dayName = button.getAttribute('data-day');
-                if (dayName === todayArabic) {
-                    const iconCircle = button.querySelector('div');
-                    if (iconCircle) {
-                        iconCircle.classList.remove('bg-white/10', 'border-white/20', 'group-hover:bg-white/20');
-                        // تعديل: استخدام نفس حجم الأيقونات (w-24 h-24)
-                        iconCircle.classList.add('bg-blue-500', 'border-blue-300', 'shadow-lg', 'w-24', 'h-24');
-                        
-                        const textSpan = iconCircle.querySelector('span');
-                        if (textSpan) {
-                            textSpan.classList.remove('text-glow', 'text-black');
-                            // تعديل: استخدام نفس حجم الخط (text-lg)
-                            textSpan.classList.add('font-bold', 'text-white', 'text-lg');
-                        }
-                    }
-                }
-            });
-        } catch (error) {
-            console.error("خطأ في تمييز اليوم الحالي:", error);
-        }
-        // --- نهاية منطق التمييز ---
-
-        // إضافة مستمع حدث لكل زر يوم
-        dayButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const dayName = button.getAttribute('data-day');
-                pageTitle.textContent = `أعمال يوم ${dayName}`;
-                
-                // --- إضافة المحتوى المخصص للأيام ---
-                if (dayName === "الجمعة") {
-                    pageContent.innerHTML = `
-                        <div class="text-right space-y-4 text-gray-900">
-                            <p class="text-lg font-semibold text-green-700">✅ يوم صالح لشراء واقتناء وخياطة الثياب والملابس.</p>
-                            <hr class="border-gray-900/10 my-4">
-                            <ul class="list-disc list-inside space-y-2 pr-4 text-gray-800">
-                                <li>يستحب فيه الغُسل قبل الزوال لصلاة الجمعة .</li>
-                                <li>المقاربة الزوجية اليوم بعد فضيلة صلاة العصر مستحبة والمولود الحاصل عالم مشهور في العالم ، وكراهيتها قبل صلاة الظهر .</li>
-                                <li>من أراد الحجامة فليحتجم الجمعة عصراً</li>
-                                <li>تقليم الأظافر الجمعة ورد عن النبي (صلى الله عليه وآله): (تقليم الأظافر يوم الجمعه يؤمن الجذام ، والجنون ، والبرص ، والعمى ، وإن لم تحتج فحكها) .وفي خبر آخر يدر الرزق وهو أهم يوم لتقليم الأظافر فمن قلم أظافره يوم الجمعة اخرج الله منه الداء وأدخله فيه الدواء.</li>
-                            </ul>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">🕛 وقت الاستخارة:</strong> <span class="text-gray-800">جيدة عند طلوع الشمس وعند العشاء و رديئة ،عند العصر والضحى.</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ تسبيح اليوم:</p>
-                                <p class="text-gray-900 italic pr-4">{ اللهم صل على محمد وآل محمد وعجل فرجهم وأهلك عدوهم ، ياالله يا هو } العدد ( ١٠٠ ) مرة.</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ مناجاة اليوم:</strong> <span class="text-gray-800">المريدين + الزاهدين</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ زيارة اليوم :</strong> <span class="text-gray-800">زيارة مولانا صاحب العصر والزمان روحي فداه .</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ صلاة اليوم:</p>
-                                <p class="text-gray-800 pr-4">ركعتين من غير صلاة الجمعة تقرأ في الأولى : سورة إبراهيم وفي الثانية سورة الحجر ، لم يصبه فقر أبداً ولا جنون ولا بلوى .</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">📿 ذكر اليوم .</strong></p>
-                                <p class="text-gray-900 italic pr-4">{ يا نور } العدد ( ٢٥٦ ) مرة.</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <div class="pt-2">
-                                <p class="text-lg font-semibold text-blue-700 mb-2 text-right">مناجاة المريدين</p>
-                                <audio controls class="w-full rounded-lg shadow-md bg-white/50 backdrop-blur-sm border border-white/20">
-                                    <source src="https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/evo3qhfar821.mp3" type="audio/mpeg">
-                                    متصفحك لا يدعم عنصر الصوت.
-                                </audio>
-                            </div>
-                            <div class="pt-2 mt-4">
-                                <p class="text-lg font-semibold text-blue-700 mb-2 text-right">مناجاة الزاهدين</p>
-                                <audio controls class="w-full rounded-lg shadow-md bg-white/50 backdrop-blur-sm border border-white/20">
-                                    <source src="https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/tk33q7ozib7m.mp3" type="audio/mpeg">
-                                    متصفحك لا يدعم عنصر الصوت.
-                                </audio>
-                            </div>
-                        </div>
-                    `;
-                } else if (dayName === "السبت") {
-                    pageContent.innerHTML = `
-                        <div class="text-right space-y-4 text-gray-900">
-                            <p class="text-lg font-semibold text-red-700">❎ المقاربة الزوجية ( ليلة الأحد ) غير جيدة والمولود فيه يكون مشؤوما ثقيلاً.</p>
-                            <p class="text-lg font-semibold text-green-700">✅ يصح فيه ( الحجامة والفصد) .</p>
-                            <p class="text-lg font-semibold text-red-700">❎ يكره تقليم الاظافر يوم السبت (من قلم أظافره يوم السبت وقعت الآكلة في أصابعه)</p>
-                            <p class="text-lg font-semibold text-red-700">❎ لا يصلح فيه شراء أو خياطة أو أقتناء الثياب والملابس.</p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">🕛 وقت الاستخارة:</strong> <span class="text-gray-800">جيدة إلى الضحى والعصر و رديئة ،عند الزوال والعشاء .</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ تسبيح اليوم:</p>
-                                <p class="text-gray-900 italic pr-4">{ يارب العالمين يا رحمن يا رحيم} ( ١٠٠ )مرة.</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ مناجاة اليوم:</strong> <span class="text-gray-800">المحبين + الشاكين + المطيعين لله</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ زيارة اليوم :</strong> <span class="text-gray-800">زيارة النبي الاكرم صلى الله عليه وآله وسلم .</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ صلاة اليوم:</p>
-                                <p class="text-gray-800 pr-4">روى السيد ابن طاووس عن الإمام العسكري عليه‌السلام قال : من صلّى يوم السبت أربع ركعات يقرأ في كل ركعة فاتحة الكتاب وقل هو الله أحد وآية الكرسي كتبه الله عزَّ وجلَّ في درجة النبيين والشهداء والصالحين وحسن أولئك رفيقا .</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">📿 ذكر يوم السبت .</strong></p>
-                                <p class="text-gray-900 italic pr-4">{ يا غني } العدد ( ١٠٦٠ ) مرة‏</p>
-                            </div>
-                        </div>
-                    `;
-                } else if (dayName === "الأحد") {
-                     pageContent.innerHTML = `
-                        <div class="text-right space-y-4 text-gray-900">
-                            <p class="text-lg font-semibold text-green-700">✅ المقاربة الزوجية جيدة والمولود الحاصل حافظا لکتاب الله.</p>
-                            <p class="text-lg font-semibold text-green-700">✅ استحباب الحجامة . بعد الزوال .</p>
-                            <p class="text-lg font-semibold text-red-700">❎ تقليم الأظافر غير جيد ، ويذهب البركه ، لما روي (من قلم أظافره يوم الأحد ذهبت البركه من يده) .</p>
-                            <p class="text-lg font-semibold text-red-700">❎ لا يصلح لشراء واقتناء وخياطة الثياب والملابس.</p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">🕛 وقت الاستخارة:</strong> <span class="text-gray-800">جيدة عند طلوع الشمس وعند العشاء و رديئة ،عند العصر والضحى</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ تسبيح اليوم:</p>
-                                <p class="text-gray-900 italic pr-4">{ يا ذا الجلال والاكرام يا واحد يا أحد } ( ١٠٠ )مرة.</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ مناجاة اليوم:</strong> <span class="text-gray-800">الخائفين + المتوسلين</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ زيارة اليوم :</strong> <span class="text-gray-800">زيارة أَميرِ المُؤمِنين والسيدة الزَّهراءِ سَلامُ الله عَليهما</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ صلاة اليوم:</p>
-                                <p class="text-gray-800 pr-4">من صلى يوم الأحد أربع ركعات يقرء في كل ركعة بفاتحة الكتاب وآمن الرسول👇 مرة، كتب الله بعدد كل نصراني ونصرانية حسنات، وأعطاه الله تعالى ثواب الف nabi، وكتب له ألف حجة وعمرة وكتب له بكل ركعة ألف صلاة، وأعطاه الله في الجنة بكل حرف مدينة من مسك .</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">📿 ذكر يوم الأحد</strong></p>
-                                <p class="text-gray-900 italic pr-4">{ يا فتاح } العدد (٤٨٩) مرة</p>
-                            </div>
-                        </div>
-                    `;
-                } else if (dayName === "الاثنين") {
-                     pageContent.innerHTML = `
-                        <div class="text-right space-y-4 text-gray-900">
-                            <p class="text-lg font-semibold text-green-700">✅ يوم الإثنين يوم مناسب لتقليم الأظافر و له بركات من قبيل أنه يصبح قارئ و حافظ لكتاب الله الكريم.</p>
-                            <p class="text-lg font-semibold text-green-700">✅ يصلح للمقاربة الزوجية . ليلاً</p>
-                            <p class="text-lg font-semibold text-green-700">✅ من أراد الحجامة فليحتجم يوم الاثنين .</p>
-                            <p class="text-lg font-semibold text-green-700">✅ يوم صالح لشراء واقتناء وخياطة الثياب والملابس.</p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">🕛 وقت الاستخارة:</strong> <span class="text-gray-800">جيدة ، حين طلوع الشمس والمغرب والعشاء</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ تسبيح اليوم:</p>
-                                <p class="text-gray-900 italic pr-4">( يا قاضي الحاجات يا فرد يا صمد ) ( ١٠٠ مرة )</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ مناجاة اليوم:</strong> <span class="text-gray-800">المفتقرين + الراجين</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ زيارة اليوم :</strong> <span class="text-gray-800">زيارة الإمامين الحسن والحسين عليهما السلام</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ صلاة اليوم:</p>
-                                <p class="text-gray-800 pr-4">روى السيد ابن طاووس عن الإمام العسكري عليه‌السلام قال : من صلّى يوم الاثنين عشر ركعات يقرأ في كل ركعة فاتحة الكتاب وقل هو الله أحد عشراً جعل اللّه له إلى يوم الجمعة نوراً يضي منه الموقف حتى يغبطه به جميع من خلق الله في ذلك اليوم .</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">📿 ذكر اليوم .</strong></p>
-                                <p class="text-gray-900 italic pr-4">{ يا لطيف } العدد ( ١٢٩ ) مرة</p>
-                            </div>
-                        </div>
-                    `;
-                } else if (dayName === "الثلاثاء") {
-                     pageContent.innerHTML = `
-                        <div class="text-right space-y-4 text-gray-900">
-                            <p class="text-lg font-semibold text-green-700">✅ يوم صالح للحجامة والفصد.</p>
-                            <p class="text-lg font-semibold text-green-700">✅ يوم صالح للمقاربة الزوجية .</p>
-                            <p class="text-lg font-semibold text-red-700">❎ التقليم غير جيد ، يخاف الهلاك ، للمروي عن النبي( صلى الله عليه وآله): (من قلم أظافره يوم الثلاثاء يخاف الهلاك عليه).</p>
-                            <p class="text-lg font-semibold text-red-700">❎ لا يصلح لشراء وخياطة واقتناء الثياب والملابس .</p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">🕛 وقت الاستخارة:</strong> <span class="text-gray-800">جيدة عند الظهر والعشاء و رديئة عند الضحى والعصر</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ تسبيح اليوم:</p>
-                                <p class="text-gray-900 italic pr-4">{ يا أرحم الراحمين يا حي يا قيوم } العدد ( ١٠٠ ) مرة.</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ مناجاة اليوم:</strong> <span class="text-gray-800">الراغبين + العارفين .</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ زيارة اليوم :</strong> <span class="text-gray-800">زيارة علي بن الحسين السجاد ومحمد بن علي الباقر ، وجعفر بن محمد الصادق</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ صلاة اليوم:</p>
-                                <p class="text-gray-800 pr-4">روى السيد ابن طاووس عن الإمام العسكري عليه‌السلام قال : من صلّى يوم الثلاثاء ست ركعات يقرأ في كل ركعة فاتحة الكتاب وآية : آمن الرسول إلى آخرها وسورة إذا زلزلت مرة واحدة غفر الله له ذنوبه حتى يخرج منها كيوم ولدته أمّه.</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">📿 ذكر اليوم .</strong></p>
-                                <p class="text-gray-900 italic pr-4">{ يا قابض } العدد ( ٩٠٣ ) مرة</p>
-                            </div>
-                        </div>
-                    `;
-                } else if (dayName === "الأربعاء") {
-                     pageContent.innerHTML = `
-                        <div class="text-right space-y-4 text-gray-900">
-                            <p class="text-lg font-semibold text-red-700">❎ توقّوا الحجامة والنورة يوم الاربعاء . ليلاً</p>
-                            <p class="text-lg font-semibold text-green-700">✅ المقاربة الزوجية جيدة و المولود الحاصل عالم من العلماء أو حاكم من الحكام .</p>
-                            <p class="text-lg font-semibold text-green-700">✅ خياطة أو أقتناء أو شراء الثياب والملابس فيها منفعة.</p>
-                            <p class="text-lg font-semibold text-red-700">❎ تقليم الأظافر يوم الاربعاء غير جيد ويورث سوء الخلق ، كما جاء في بعض الأخبار عن أئمة أهل البيت عليهم السلام: (من قلم أظافره يوم الأربعاء يصير سيء الخلق) .</p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">🕛 وقت الاستخارة:</strong> <span class="text-gray-800">جيدة عند الزوال و رديئة ،عند العصر.</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ تسبيح اليوم:</p>
-                                <p class="text-gray-900 italic pr-4">{ يا حي القيوم يا حنان يا منان } العدد ( ١٠٠ ) مرة.</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ مناجاة اليوم:</strong> <span class="text-gray-800">الذاكرين + الشاكرين</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ زيارة اليوم :</strong> <span class="text-gray-800">زيارة الائمة عليهم السلام موسى بن جعفر الكاظم، وعلي بن موسى الرضا، ومحمد علي جواد ، وعلي بن محمد الهادي ( عليهم السلام جميعاً)</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ صلاة اليوم:</p>
-                                <p class="text-gray-800 pr-4">روى السيد ابن طاووس عن الإمام العسكري عليه‌السلام قال : من صلى يوم الأربعاء أربع ركعات يقرأ في كل ركعة الحمد والاخلاص وسورة القدر مرة واحدة تاب الله عليه من كل ذنب وزوّجه بزوجة من الحور العين.</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">📿 ذكر اليوم .</strong></p>
-                                <p class="text-gray-900 italic pr-4">{ يا متعال } العدد ( ٥٤١ ) مرة</p>
-                            </div>
-                        </div>
-                    `;
-                } else if (dayName === "الخميس") {
-                     pageContent.innerHTML = `
-                        <div class="text-right space-y-4 text-gray-900">
-                            <p class="text-lg font-semibold text-green-700">✅ المقاربة الزوجية ليلة الجمعة جيدة. والمولود فيه مرزوقاً طويل العمر . وصلحت سريرته وعاش سعيداً .</p>
-                            <p class="text-lg font-semibold text-green-700">✅ يوم الخميس يوم مناسب جداً لتقليم الأظافر ، يجلب صحة الجسم و شفاء للآلام..</p>
-                            <p class="text-lg font-semibold text-green-700">✅ استحباب الحجامة والفصد يوم الخميس.</p>
-                            <p class="text-lg font-semibold text-green-700">✅ يصلح فيه شراء أو خياطة أو أقتناء الثياب والملابس بل وردت أن فيها منفعة .</p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">🕛 وقت الاستخارة:</strong> <span class="text-gray-800">جيدة عند طلوع الشمس وعند العشاء و رديئة ،عند العصر والمغرب</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ تسبيح اليوم:</p>
-                                <p class="text-gray-900 italic pr-4">{ لا اله الا الله الملك الحق المبين ، يا ذا الجلال والاكرام} العدد ( ١٠٠ ) مرة.</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ مناجاة اليوم:</strong> <span class="text-gray-800">الزاهدين + المعتصمين</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <p><strong class="text-lg text-blue-700">۞ زيارة اليوم :</strong> <span class="text-gray-800">زيارة الإمام الحسن بن علي العسكري عليهما السلام .</span></p>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">۞ صلاة اليوم:</p>
-                                <p class="text-gray-800 pr-4">روي عن النبي ( صلى الله عليه و آله ) انه قال : من صلى يوم الخميس اربع ركعات ، يقرأ في الاولى منهن الحمد مرة و احدى عشر مرة قل هو الله احد ، و في الثانية الحمد مرة واحدى و عشرين مرة قل هو الله احد ، و في الثالثة الحمد مرة و واحدى و ثلاثين مرة قل هو الله احد ، و في الرابعة الحمد مرة و احدى و اربعين مرة قل هو الله احد ، كل ركعتين بتسليم ، فاذا سلم في الرابعة قرأ قل هو الله احد احدى و خمسين مرة ، و قال اللهم صل على محمد و آل محمد احدى و خمسين مرة ثم يسجد و يقول في سجوده ( يا الله ) مائة مرة ، و تدعو بما شئت .</p>
-                            </div>
-                            <hr class="border-gray-900/10 my-4">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">📿 ذكر اليوم .</strong></p>
-                                <p class="text-gray-900 italic pr-4">{ يا رزاق } ٣٠٨ مرة</p>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    pageContent.innerHTML = `
-                        <p class="text-black">لا يوجد محتوى لهذا اليوم حالياً.</p>
-                    `;
-                }
-                
-                mainContainer.classList.add('hidden');
-                dayPageContainer.classList.remove('hidden');
-                window.scrollTo(0, 0);
-            });
-        });
-
-        backButton.addEventListener('click', () => {
-            dayPageContainer.classList.add('hidden');
-            mainContainer.classList.remove('hidden');
-        });
-
-    </script>
-
-</body>
-</html>
-

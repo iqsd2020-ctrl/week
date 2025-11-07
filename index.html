@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أعمال الأيام</title>
+    <title>أعمال الأيام - واجهة ناعمة</title>
     
     <!-- === إضافات PWA (Progressive Web App) === -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://i.imgur.com/Ra9c5H4.png">
-    <meta name="theme-color" content="#FFFFFF">
+    <meta name="theme-color" content="#e0e5ec">
     <!-- ========================================== -->
 
     <!-- تحميل Tailwind CSS -->
@@ -16,41 +16,109 @@
     
     <!-- تحميل خط Cairo (أفضل للعربية) بدلاً من Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* تطبيق الخط الافتراضي وتعيين الخلفية المتدرجة */
+        /* ========================================================================= */
+        /* === قواعد Neumorphism الأساسية === */
+        /* ========================================================================= */
+        :root {
+            --primary-bg: #e0e5ec;
+            --dark-shadow: #a3b1c6;
+            --light-shadow: #ffffff;
+            --accent-color: #0984e3; /* الأزرق المميز */
+            --text-color: #33373d; /* الرمادي الداكن */
+
+            /* ظل العناصر البارزة (للبطاقات والأزرار) */
+            --outset-shadow: 6px 6px 12px var(--dark-shadow), -6px -6px 12px var(--light-shadow);
+
+            /* ظل العناصر الغائرة (لحقول الإدخال أو عند الضغط) */
+            --inset-shadow: inset 6px 6px 12px var(--dark-shadow), inset -6px -6px 12px var(--light-shadow);
+        }
+
         body {
             font-family: 'Cairo', sans-serif;
-            /* خلفية متدرجة بدلاً من الصورة لمزيد من السرعة والموثوقية */
-            background-color: #f0f4f8; /* لون احتياطي */
-            background-image: linear-gradient(to bottom right, #f0f4f8, #dbeafe, #f0f4f8);
-            background-attachment: fixed;
-        }
-
-        /* تخصيص ستايل شريط مشغل الصوت */
-        audio::-webkit-media-controls-panel {
-            background-color: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(4px);
-            border-radius: 0.5rem;
-        }
-        audio {
-            border-radius: 0.5rem;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        /* إخفاء النافذة المنبثقة افتراضياً */
-        #daily-modal-backdrop {
-            display: none;
+            background-color: var(--primary-bg); /* الخلفية الأساسية المطلوبة */
+            color: var(--text-color); /* لون الخط الأساسي */
+            /* إزالة أي خلفيات متدرجة/صور غير مطلوبة */
         }
         
+        /* إعادة تعيين لجميع العناصر التفاعلية */
+        button, .neumo-outset, .neumo-inset, details, audio {
+            background-color: var(--primary-bg) !important; /* لون العناصر نفس لون الخلفية */
+            border: none !important; /* إزالة الحدود */
+            outline: none;
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* ستايل العناصر البارزة (الافتراضية) */
+        .neumo-outset {
+            box-shadow: var(--outset-shadow);
+            border-radius: 15px; /* زوايا ناعمة */
+        }
+        
+        /* تأثير الغوص عند الضغط على عنصر بارز */
+        .neumo-outset:active, 
+        .neumo-outset-btn:active,
+        .day-button-active { /* حالة النشاط لزر اليوم الحالي */
+            box-shadow: var(--inset-shadow);
+            transform: scale(0.98);
+        }
+
+        /* ستايل العناصر الغائرة (لحقول الإدخال/النافذة المنبثقة للنسخ) */
+        .neumo-inset {
+            box-shadow: var(--inset-shadow);
+            border-radius: 15px;
+        }
+
+        /* ستايل للأزرار المستطيلة (التي تعمل كبطاقات للتنقل) */
+        .neumo-outset-btn {
+            box-shadow: var(--outset-shadow);
+            border-radius: 15px;
+            cursor: pointer;
+            padding: 1rem;
+        }
+        /* تأثير التمرير الخفيف (رفع بسيط) */
+        .neumo-outset-btn:hover {
+            box-shadow: 3px 3px 6px var(--dark-shadow), -3px -3px 6px var(--light-shadow);
+        }
+
+        /* ستايل للأزرار الدائرية للأيام */
+        .day-circle {
+            box-shadow: var(--outset-shadow);
+            border-radius: 50%;
+            transition: all 0.3s ease-in-out;
+        }
+        .day-circle:hover {
+            box-shadow: 3px 3px 6px var(--dark-shadow), -3px -3px 6px var(--light-shadow);
+            transform: scale(1.05);
+        }
+        .day-circle.highlighted {
+            /* حالة اليوم الحالي (غائرة مع لون مميز) */
+            box-shadow: var(--inset-shadow);
+            color: var(--accent-color);
+            font-weight: bold;
+            transform: scale(1);
+        }
+
+
+        /* ========================================================================= */
+        /* === تطبيقات الستايل على باقي العناصر === */
+        /* ========================================================================= */
+
+        /* ستايل للعنوان (تطبيق اللون المميز) */
+        .page-header {
+            color: var(--accent-color);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
         /* ستايل لزر النسخ */
         .copy-btn {
             cursor: pointer;
-            font-size: 1.1rem;
-            opacity: 0.6;
-            transition: opacity 0.2s, transform 0.2s;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            opacity: 0.7;
             padding: 0 0.5rem;
         }
         .copy-btn:hover {
@@ -60,31 +128,28 @@
         
         /* ستايل للأقسام القابلة للطي (details/summary) */
         details {
-            background-color: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            border-radius: 0.75rem;
-            margin-bottom: 0.5rem; /* تقليل المسافة بين عناصر الأكورديون */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: background-color 0.2s;
+            border-radius: 20px;
+            box-shadow: var(--outset-shadow); /* بارز افتراضياً */
+            margin-bottom: 1.5rem;
         }
-        details:hover {
-             background-color: rgba(255, 255, 255, 0.9);
+        details[open] {
+            box-shadow: var(--inset-shadow); /* يصبح غائراً عند الفتح */
         }
         summary {
             padding: 1rem;
             font-weight: 700;
             cursor: pointer;
             font-size: 1.1rem;
-            color: #1d4ed8; /* blue-800 */
-            list-style: none; /* إخفاء السهم الافتراضي */
+            color: var(--text-color);
+            list-style: none;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        /* إضافة سهم مخصص */
         summary::after {
             content: '◀';
             font-size: 0.8rem;
+            color: var(--accent-color);
             transition: transform 0.2s;
             margin-right: 0.5rem;
         }
@@ -93,33 +158,75 @@
         }
         .details-content {
             padding: 0 1rem 1rem 1rem;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            border-top: 1px solid var(--dark-shadow); /* فاصل خفيف */
             line-height: 1.7;
-            color: #374151; /* gray-700 */
         }
         
-        /* ستايل للبطاقات (بدلاً من hr) */
+        /* ستايل للبطاقات (محتوى اليوم) */
         .content-card {
-            background-color: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            border-radius: 0.75rem;
-            padding: 1rem;
+            box-shadow: var(--outset-shadow);
+            border-radius: 20px;
+            padding: 1.5rem;
             margin-bottom: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             line-height: 1.7;
         }
+
+        /* تخصيص ستايل شريط مشغل الصوت */
+        audio {
+            border-radius: 10px;
+            box-shadow: var(--inset-shadow); /* لتبدو غائرة */
+        }
+        audio::-webkit-media-controls-panel {
+            background-color: var(--primary-bg);
+            border-radius: 10px;
+        }
+        audio::-webkit-media-controls-play-button,
+        audio::-webkit-media-controls-timeline,
+        audio::-webkit-media-controls-volume-slider {
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+        }
+
+        /* إخفاء النافذة المنبثقة افتراضياً */
+        #daily-modal-backdrop {
+            display: none;
+        }
+        
+        /* ستايل لزر الرجوع */
+        #back-button {
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            /* تطبيق نمط Neumorphism بشكل صريح */
+            box-shadow: var(--outset-shadow);
+        }
+        /* للتفريق، نستخدم اللون المميز كلون للنص لزر الرجوع */
+        #back-button span {
+            color: var(--accent-color); 
+        }
+
+        /* ستايل Toast */
+        #copy-toast {
+            background-color: var(--primary-bg) !important;
+            color: var(--accent-color);
+            box-shadow: var(--outset-shadow);
+            border-radius: 30px;
+            font-weight: bold;
+        }
+
     </style>
 </head>
-<body class="antialiased text-gray-900">
+<body class="antialiased">
 
     <!-- === النافذة المنبثقة للملاحظة اليومية === -->
-    <div id="daily-modal-backdrop" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm">
-        <div id="daily-modal-content" class="w-full max-w-md p-6 bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 text-center space-y-4">
-            <h3 class="text-xl font-bold text-blue-800">ملاحظة هامة</h3>
-            <p class="text-base font-medium text-gray-800 leading-relaxed">
+    <div id="daily-modal-backdrop" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-30">
+        <!-- تطبيق Neumorphism على محتوى المودال -->
+        <div id="daily-modal-content" class="w-full max-w-md p-6 neumo-outset rounded-2xl text-center space-y-4">
+            <h3 class="text-xl font-bold" style="color: var(--accent-color);">ملاحظة هامة</h3>
+            <p class="text-base font-medium leading-relaxed">
                 يبدأ اليوم الشرعي ( ليلاً ثم نهاراً). إذا كنت مضطراً لفعل أمرٍ منهي عنه او لم ينصح القيام بفعله فعليك التصدق أولاً مع الاستغغار وقراءة آية الكرسي باستمرار.
             </p>
-            <button id="close-modal-btn" class="w-full px-4 py-3 font-semibold text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all">
+            <!-- تطبيق Neumorphism على زر الإغلاق -->
+            <button id="close-modal-btn" class="neumo-outset-btn w-full px-4 py-3 font-semibold text-white focus:outline-none focus:ring-opacity-50 transition-all" style="color: var(--accent-color);">
                 إغلاق
             </button>
         </div>
@@ -127,102 +234,103 @@
     <!-- ======================================== -->
 
 
-    <!-- حاوية رئيسية لتوسيط اللوح الزجاجي (واجهة اختيار الأيام) -->
+    <!-- حاوية رئيسية لتوسيط الواجهة -->
     <div id="main-container" class="min-h-screen w-full flex items-center justify-center p-4">
 
-        <!-- [تحسين] تم تكبير العرض الأقصى قليلاً -->
-        <div class="w-full max-w-lg p-6 md:p-8 space-y-6 bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10">
+        <!-- لوحة التحكم الرئيسية (neumo-outset) -->
+        <div class="w-full max-w-lg p-6 md:p-8 space-y-6 neumo-outset rounded-[22px]">
             
-            <h2 class="text-3xl font-bold text-center text-gray-900">
+            <h2 class="text-3xl font-bold text-center page-header">
                 أعمال الأيام
             </h2>
 
-            <!-- [تحسين] عنوان لمجموعة الأيام -->
-            <h3 class="text-xl font-semibold text-gray-700 text-center pt-2">الأعمال اليومية</h3>
+            <h3 class="text-xl font-semibold text-center pt-2">الأعمال اليومية</h3>
 
             <div class="flex flex-wrap justify-center gap-4 text-center">
 
-                <!-- كل يوم من أيام الأسبوع -->
+                <!-- كل يوم من أيام الأسبوع - تطبيق Neumorphism على الدائرة -->
                 <div class="flex flex-col items-center group cursor-pointer w-20 h-20 md:w-24 md:h-24 day-button" data-day="الجمعة">
-                    <div class="w-full h-full bg-white/30 rounded-full flex items-center justify-center border border-white/40 transition-all duration-300 group-hover:bg-white/50 group-hover:scale-105 shadow-md">
-                        <span class="text-lg font-semibold text-gray-800">الجمعة</span>
+                    <div class="w-full h-full day-circle flex items-center justify-center text-lg font-semibold">
+                        <span>الجمعة</span>
                     </div>
                 </div>
 
                 <div class="flex flex-col items-center group cursor-pointer w-20 h-20 md:w-24 md:h-24 day-button" data-day="السبت">
-                    <div class="w-full h-full bg-white/30 rounded-full flex items-center justify-center border border-white/40 transition-all duration-300 group-hover:bg-white/50 group-hover:scale-105 shadow-md">
-                        <span class="text-lg font-semibold text-gray-800">السبت</span>
+                    <div class="w-full h-full day-circle flex items-center justify-center text-lg font-semibold">
+                        <span>السبت</span>
                     </div>
                 </div>
 
                 <div class="flex flex-col items-center group cursor-pointer w-20 h-20 md:w-24 md:h-24 day-button" data-day="الأحد">
-                    <div class="w-full h-full bg-white/30 rounded-full flex items-center justify-center border border-white/40 transition-all duration-300 group-hover:bg-white/50 group-hover:scale-105 shadow-md">
-                        <span class="text-lg font-semibold text-gray-800">الأحد</span>
+                    <div class="w-full h-full day-circle flex items-center justify-center text-lg font-semibold">
+                        <span>الأحد</span>
                     </div>
                 </div>
 
                 <div class="flex flex-col items-center group cursor-pointer w-20 h-20 md:w-24 md:h-24 day-button" data-day="الاثنين">
-                    <div class="w-full h-full bg-white/30 rounded-full flex items-center justify-center border border-white/40 transition-all duration-300 group-hover:bg-white/50 group-hover:scale-105 shadow-md">
-                        <span class="text-lg font-semibold text-gray-800">الاثنين</span>
+                    <div class="w-full h-full day-circle flex items-center justify-center text-lg font-semibold">
+                        <span>الاثنين</span>
                     </div>
                 </div>
 
                 <div class="flex flex-col items-center group cursor-pointer w-20 h-20 md:w-24 md:h-24 day-button" data-day="الثلاثاء">
-                    <div class="w-full h-full bg-white/30 rounded-full flex items-center justify-center border border-white/40 transition-all duration-300 group-hover:bg-white/50 group-hover:scale-105 shadow-md">
-                        <span class="text-lg font-semibold text-gray-800">الثلاثاء</span>
+                    <div class="w-full h-full day-circle flex items-center justify-center text-lg font-semibold">
+                        <span>الثلاثاء</span>
                     </div>
                 </div>
 
                 <div class="flex flex-col items-center group cursor-pointer w-20 h-20 md:w-24 md:h-24 day-button" data-day="الأربعاء">
-                    <div class="w-full h-full bg-white/30 rounded-full flex items-center justify-center border border-white/40 transition-all duration-300 group-hover:bg-white/50 group-hover:scale-105 shadow-md">
-                        <span class="text-lg font-semibold text-gray-800">الأربعاء</span>
+                    <div class="w-full h-full day-circle flex items-center justify-center text-lg font-semibold">
+                        <span>الأربعاء</span>
                     </div>
                 </div>
 
                 <div class="flex flex-col items-center group cursor-pointer w-20 h-20 md:w-24 md:h-24 day-button" data-day="الخميس">
-                    <div class="w-full h-full bg-white/30 rounded-full flex items-center justify-center border border-white/40 transition-all duration-300 group-hover:bg-white/50 group-hover:scale-105 shadow-md">
-                        <span class="text-lg font-semibold text-gray-800">الخميس</span>
+                    <div class="w-full h-full day-circle flex items-center justify-center text-lg font-semibold">
+                        <span>الخميس</span>
                     </div>
                 </div>
 
             </div>
             
-            <!-- [تحسين] فاصل + عنوان للأقسام العامة -->
-            <hr class="border-gray-300/70 my-6">
-            <h3 class="text-xl font-semibold text-gray-700 text-center mb-4">أقسام عامة</h3>
+            <!-- فاصل -->
+            <hr class="border-gray-300/50 my-6">
+            <h3 class="text-xl font-semibold text-center mb-4">أقسام عامة</h3>
             
-            <!-- [تحسين] شبكة للأزرار المستطيلة (تترتب تلقائياً) -->
+            <!-- شبكة للأزرار المستطيلة - تطبيق neumo-outset-btn -->
             <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 
-                <div class="group cursor-pointer p-4 h-full bg-white/30 rounded-lg border border-white/40 transition-all duration-300 hover:bg-white/50 hover:scale-[1.03] shadow-md hover:shadow-lg day-button" data-day="المناجاة الخمس عشرة">
-                    <span class="text-lg font-semibold text-gray-800">المناجاة الخمس عشرة</span>
+                <div class="neumo-outset-btn h-full day-button" data-day="المناجاة الخمس عشرة">
+                    <span class="text-lg font-semibold">المناجاة الخمس عشرة</span>
                 </div>
                 
-                <div class="group cursor-pointer p-4 h-full bg-white/30 rounded-lg border border-white/40 transition-all duration-300 hover:bg-white/50 hover:scale-[1.03] shadow-md hover:shadow-lg day-button" data-day="ادعية">
-                    <span class="text-lg font-semibold text-gray-800">ادعية</span>
+                <div class="neumo-outset-btn h-full day-button" data-day="ادعية">
+                    <span class="text-lg font-semibold">ادعية</span>
                 </div>
 
-                <div class="group cursor-pointer p-4 h-full bg-white/30 rounded-lg border border-white/40 transition-all duration-300 hover:bg-white/50 hover:scale-[1.03] shadow-md hover:shadow-lg day-button" data-day="ادعية الجمعة">
-                    <span class="text-lg font-semibold text-gray-800">ادعية الجمعة</span>
+                <div class="neumo-outset-btn h-full day-button" data-day="ادعية الجمعة">
+                    <span class="text-lg font-semibold">ادعية الجمعة</span>
                 </div>
             </div>
             <!-- ======================= -->
 
-        </div> <!-- نهاية اللوح الزجاجي -->
+        </div> <!-- نهاية اللوح النيومورفي -->
     </div>
 
     <!-- حاوية الصفحة الكاملة (مخفية افتراضياً) -->
-    <!-- [تحسين] تم تكبير العرض الأقصى -->
     <div id="day-page-container" class="min-h-screen w-full flex items-center justify-center p-2 md:p-4 hidden">
-        <div class="w-full max-w-5xl p-4 md:p-8 space-y-6 bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10">
+        
+        <!-- لوحة المحتوى (neumo-outset) -->
+        <div class="w-full max-w-5xl p-4 md:p-8 space-y-6 neumo-outset rounded-[22px]">
             
-            <!-- [تحسين] تم تغيير تصميم زر الرجوع -->
-            <button id="back-button" class="mb-4 text-white bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transition-all font-semibold">&larr; رجوع</button>
+            <!-- زر الرجوع -->
+            <button id="back-button" class="transition-all" style="color: var(--text-color);">
+                &larr; <span class="font-semibold" style="color: var(--accent-color);">رجوع</span>
+            </button>
             
-            <!-- [تحسين] تم إضافة خط فاصل أسفل العنوان -->
-            <h2 id="page-title" class="text-3xl font-bold text-center text-gray-900 border-b pb-4 border-gray-300/50"></h2>
+            <h2 id="page-title" class="text-3xl font-bold text-center page-header pb-4"></h2>
             
-            <div id="page-content" class="mt-6 text-right min-h-[200px] max-h-[70vh] overflow-y-auto p-2 md:p-4 rounded-lg">
+            <div id="page-content" class="mt-6 text-right min-h-[200px] max-h-[70vh] overflow-y-auto p-2 md:p-4 neumo-inset rounded-2xl">
                 <!-- المحتوى سيتم حقنه هنا بواسطة JS -->
             </div>
         </div>
@@ -232,20 +340,18 @@
     <textarea id="copy-helper" class="absolute -top-full"></textarea>
     
     <!-- رسالة تأكيد النسخ (مخفية) -->
-    <div id="copy-toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 opacity-0 transform translate-y-5">
+    <div id="copy-toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 px-6 py-3 opacity-0 transform translate-y-5">
         تم النسخ إلى الحافظة!
     </div>
 
 
     <script>
-        // --- [التعديل] ---
-        // ربط جميع الأحداث بعد تحميل الـ DOM بالكامل لضمان العثور على جميع العناصر
         document.addEventListener('DOMContentLoaded', () => {
 
-            // --- 1. تسجيل Service Worker ---
+            // --- 1. تسجيل Service Worker (بدون تغيير) ---
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('sw.js') // تم تغيير المسار ليعمل بشكل صحيح
+                    navigator.serviceWorker.register('sw.js')
                         .then(registration => {
                             console.log('Service Worker registered successfully:', registration);
                         })
@@ -254,11 +360,8 @@
                         });
                 });
             }
-            // --- نهاية تسجيل Service Worker ---
 
-
-            // --- 2. [التصحيح الكبير] فصل البيانات عن الكود ---
-            // كل محتوى الأيام أصبح هنا، مما يسهل التعديل والصيانة
+            // --- 2. البيانات (بدون تغيير) ---
             const daysData = {
                 "الجمعة": {
                     sections: [
@@ -358,7 +461,7 @@
                 
                 "المناجاة الخمس عشرة": {
                     sections: [
-                        { type: 'card', content: '<strong>۞ المناجاة الخمس عشرة:</strong>' },
+                        { type: 'card', content: '<strong style="color: var(--accent-color);">۞ المناجاة الخمس عشرة:</strong>' },
                         { type: 'audio', title: 'مناجاة التائبين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/ooo13w88n93y.mp3' },
                         { type: 'audio', title: 'مناجاة الشاكين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/xsc2pjijopwh.mp3' },
                         { type: 'audio', title: 'مناجاة الخائفين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/wxd55umyeb0j.mp3' },
@@ -379,7 +482,7 @@
 
                 "ادعية": {
                     sections: [
-                        { type: 'card', content: '<strong>۞ ادعية مختارة:</strong>' },
+                        { type: 'card', content: '<strong style="color: var(--accent-color);">۞ ادعية مختارة:</strong>' },
                         { type: 'audio', title: 'دعاء الافتتاح', url: 'https://shiavoice.com/media/edaie/asdarat/mohammed_elhujerat/rewa3_ed3ie/miy1dpzafhkv.mp3' },
                         { type: 'audio', title: 'دعاء العهد', url: 'https://shiavoice.com/media/edaie/asdarat/mohammed_elhujerat/rewa3_ed3ie/fhbi9i9shpgd.mp3' },
                         { type: 'audio', title: 'دعاء الندبة', url: 'https://shiavoice.com/media/edaie/du3a_nudbe/yhd6n5mgs3nu.mp3' },
@@ -390,7 +493,7 @@
 
                 "ادعية الجمعة": {
                     sections: [
-                        { type: 'card', content: '<strong>۞ ادعية الجمعة:</strong>' },
+                        { type: 'card', content: '<strong style="color: var(--accent-color);">۞ ادعية الجمعة:</strong>' },
                         { type: 'audio', title: 'دعاء الجمعة الأولى', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-1.mp3' },
                         { type: 'audio', title: 'دعاء الجمعة الثانية', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-2.mp3' },
                         { type: 'audio', title: 'دعاء الجمعة الثالثة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-3.mp3' },
@@ -441,7 +544,7 @@
                 // --- نهاية الإضافة ---
             };
 
-            // --- 3. جلب عناصر الـ DOM ---
+            // --- 3. جلب عناصر الـ DOM (بدون تغيير) ---
             const modalBackdrop = document.getElementById('daily-modal-backdrop');
             const closeModalBtn = document.getElementById('close-modal-btn');
             const dayButtons = document.querySelectorAll('.day-button');
@@ -453,7 +556,7 @@
             const copyToast = document.getElementById('copy-toast');
             const copyHelper = document.getElementById('copy-helper');
 
-            // --- 4. منطق النافذة المنبثقة اليومية (لا تغيير) ---
+            // --- 4. منطق النافذة المنبثقة اليومية (بدون تغيير في المنطق، تغيير في الفئات) ---
             (function showDailyModal() {
                 const today = new Date().toDateString();
                 const lastShownDate = localStorage.getItem('lastModalShownDate');
@@ -473,7 +576,7 @@
                 });
             })();
 
-            // --- 5. منطق تمييز اليوم الحالي (لا تغيير) ---
+            // --- 5. [التحديث] منطق تمييز اليوم الحالي ليتوافق مع Neumorphism ---
             (function highlightToday() {
                 const dayMap = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
                 try {
@@ -484,16 +587,10 @@
                         const dayName = button.getAttribute('data-day');
                         if (dayName === todayArabic) {
                             // تمييز الأزرار الدائرية فقط
-                            const iconCircle = button.querySelector('div.rounded-full');
+                            const iconCircle = button.querySelector('.day-circle');
                             if (iconCircle) {
-                                iconCircle.classList.remove('bg-white/30', 'border-white/40', 'group-hover:bg-white/50');
-                                iconCircle.classList.add('bg-blue-600', 'border-blue-400', 'shadow-lg', 'scale-105');
-                                
-                                const textSpan = iconCircle.querySelector('span');
-                                if (textSpan) {
-                                    textSpan.classList.remove('text-gray-800');
-                                    textSpan.classList.add('font-bold', 'text-white');
-                                }
+                                // تطبيق نمط الغوص (Inset) واللون المميز
+                                iconCircle.classList.add('highlighted');
                             }
                         }
                     });
@@ -502,12 +599,11 @@
                 }
             })();
 
-            // --- 6. [التحسين] دالة بناء محتوى الصفحة ---
-            // هذه الدالة تقرأ من كائن البيانات `daysData` وتنشئ الـ HTML
+            // --- 6. دالة بناء محتوى الصفحة (بدون تغيير في المنطق، تغيير في الفئات) ---
             function renderDayPage(dayName) {
                 const data = daysData[dayName];
                 if (!data) {
-                    pageContent.innerHTML = '<p class="text-center text-gray-700">لا يوجد محتوى لهذا اليوم حالياً.</p>';
+                    pageContent.innerHTML = '<p class="text-center">لا يوجد محتوى لهذا اليوم حالياً.</p>';
                     return;
                 }
 
@@ -525,11 +621,11 @@
                             html += `
                                 <div class="content-card">
                                     <div class="flex justify-between items-center">
-                                        <h4 class="text-lg font-semibold text-blue-800">${section.title}</h4>
+                                        <h4 class="text-lg font-semibold" style="color: var(--accent-color);">${section.title}</h4>
                                         <span class="copy-btn" data-text="${section.text}" title="نسخ">📋</span>
                                     </div>
-                                    <p class="text-gray-900 italic pr-4 mt-2" dir="ltr">${section.text}</p>
-                                    <p class="text-sm text-gray-600 pr-4 mt-1">${section.subtext}</p>
+                                    <p class="italic pr-4 mt-2" dir="ltr">${section.text}</p>
+                                    <p class="text-sm pr-4 mt-1">${section.subtext}</p>
                                 </div>`;
                             break;
 
@@ -542,13 +638,13 @@
                             break;
 
                         case 'audio':
-                            // [التحسين] استخدام الأكورديون للصفحات الطويلة
+                            // استخدام الأكورديون لصفحات المناجاة والأدعية
                             if (dayName === 'ادعية الجمعة' || dayName === 'المناجاة الخمس عشرة') {
                                 html += `
                                     <details>
                                         <summary>${section.title}</summary>
                                         <div class="details-content pt-4">
-                                            <audio controls class="w-full rounded-lg shadow-sm bg-white/50 backdrop-blur-sm">
+                                            <audio controls class="w-full">
                                                 <source src="${section.url}" type="audio/mpeg">
                                                 متصفحك لا يدعم عنصر الصوت.
                                             </audio>
@@ -558,8 +654,8 @@
                                 // العرض العادي للبطاقة
                                 html += `
                                     <div class="content-card">
-                                        <p class="text-lg font-semibold text-blue-800 mb-2">${section.title}</p>
-                                        <audio controls class="w-full rounded-lg shadow-sm bg-white/50 backdrop-blur-sm">
+                                        <p class="text-lg font-semibold" style="color: var(--accent-color);">${section.title}</p>
+                                        <audio controls class="w-full mt-2">
                                             <source src="${section.url}" type="audio/mpeg">
                                             متصفحك لا يدعم عنصر الصوت.
                                         </audio>
@@ -571,13 +667,12 @@
                 pageContent.innerHTML = html;
             }
 
-            // --- 7. [الميزة] دالة النسخ إلى الحافظة ---
+            // --- 7. دالة النسخ إلى الحافظة (بدون تغيير) ---
             function copyToClipboard(text) {
                 try {
-                    // نستخدم العنصر المخفي لإجراء عملية النسخ
                     copyHelper.value = text;
                     copyHelper.select();
-                    copyHelper.setSelectionRange(0, 99999); // لضمان التحديد الكامل
+                    copyHelper.setSelectionRange(0, 99999);
                     document.execCommand('copy');
                     
                     // إظهار رسالة تأكيد (Toast)
@@ -594,16 +689,13 @@
                 }
             }
 
-            // --- 8. ربط الأحداث ---
+            // --- 8. ربط الأحداث (بدون تغيير في المنطق) ---
             
-            // أزرار الأيام (بما في ذلك الزر الجديد)
+            // أزرار الأيام
             dayButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    console.log('تم الضغط على زر:', button.getAttribute('data-day'));
-
                     const dayName = button.getAttribute('data-day');
                     
-                    // --- [تحسين] تعديل العنوان ليتناسب مع الأزرار الجديدة ---
                     if (dayName === "المناجاة الخمس عشرة") {
                         pageTitle.textContent = "المناجاة الخمس عشرة";
                     } else if (dayName === "ادعية") {
@@ -613,9 +705,7 @@
                     } else {
                         pageTitle.textContent = `أعمال يوم ${dayName}`;
                     }
-                    // --- نهاية التحسين ---
                     
-                    // [التغيير] استدعاء الدالة الجديدة لإنشاء المحتوى
                     renderDayPage(dayName);
                     
                     mainContainer.classList.add('hidden');
@@ -632,7 +722,7 @@
                 pageContent.querySelectorAll('audio').forEach(audio => audio.pause());
             });
             
-            // [الميزة] ربط حدث النسخ (باستخدام تفويض الأحداث)
+            // ربط حدث النسخ
             pageContent.addEventListener('click', (e) => {
                 if (e.target.classList.contains('copy-btn')) {
                     const textToCopy = e.target.getAttribute('data-text');
@@ -642,12 +732,9 @@
                 }
             });
         
-        // --- [التعديل] ---
-        // إغلاق دالة DOMContentLoaded
         });
     </script>
 
 </body>
 </html>
-
 

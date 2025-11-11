@@ -51,8 +51,9 @@
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     window.currentUser = user;
+                    // تسجيل الزيارة (جلسة جديدة)
                     if (!sessionStorage.getItem('session_logged')) {
-                        window.logAppAction("دخول", "فتح التطبيق (جلسة جديدة)");
+                        window.logAppAction("دخول", "زيارة جديدة للموقع");
                         sessionStorage.setItem('session_logged', 'true');
                     }
                 } else {
@@ -80,7 +81,14 @@
             background-color: var(--primary-bg);
             color: var(--text-color);
             -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
         }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--primary-bg); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         button, .neumo-outset, .neumo-inset, details {
             background-color: var(--primary-bg) !important;
@@ -120,16 +128,30 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            overflow: hidden;
         }
-        .day-circle.highlighted {
-            box-shadow: var(--inset-shadow);
+        
+        /* تمييز اليوم الحالي */
+        .current-day-active .day-circle {
+            box-shadow: var(--outset-shadow), 0 0 15px rgba(9, 132, 227, 0.2);
+            border: 2px solid rgba(9, 132, 227, 0.1);
+            color: var(--accent-color) !important;
+            transform: scale(1.05);
+        }
+        .current-day-active .day-circle::after {
+            content: 'اليوم';
+            position: absolute;
+            bottom: 8px;
+            font-size: 9px;
             color: var(--accent-color);
-            font-weight: bold;
+            opacity: 0.8;
         }
-
+        
         .page-header { color: var(--accent-color); }
         .material-symbols-rounded { vertical-align: middle; }
 
+        /* مشغل الصوت */
         .custom-player-card {
             background: var(--primary-bg);
             border-radius: 20px;
@@ -140,7 +162,6 @@
             gap: 12px;
             margin-top: 0.5rem;
         }
-
         .play-btn {
             width: 45px; height: 45px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
@@ -150,7 +171,6 @@
         .play-btn:active, .play-btn.playing {
             box-shadow: var(--inset-shadow); color: #e84118;
         }
-
         input[type="range"].custom-seek {
             -webkit-appearance: none; width: 100%; height: 6px;
             background: transparent; cursor: pointer;
@@ -191,9 +211,18 @@
         details[open] summary::after { transform: rotate(-90deg); }
         .details-content { padding: 1rem; border-top: 1px solid rgba(0,0,0,0.05); line-height: 1.8; }
         
-        #daily-modal-backdrop, #admin-pin-modal, #admin-dashboard-modal { display: none; animation: fadeIn 0.3s ease-out; }
+        #daily-modal-backdrop, #admin-pin-modal { display: none; animation: fadeIn 0.3s ease-out; }
+        #splash-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background-color: var(--primary-bg);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease-out;
+        }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(9, 132, 227, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(9, 132, 227, 0); } 100% { box-shadow: 0 0 0 0 rgba(9, 132, 227, 0); } }
         
+        .current-day-active { animation: pulse-glow 2s infinite; border-radius: 50%; }
+
         #copy-toast {
             background-color: var(--primary-bg) !important; color: var(--accent-color);
             box-shadow: var(--outset-shadow); border-radius: 30px; pointer-events: none;
@@ -214,33 +243,48 @@
             box-shadow: var(--inset-shadow); color: var(--accent-color); font-weight: bold;
         }
 
-        .admin-table-container { max-height: 400px; overflow-y: auto; }
-        .admin-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 0.8rem; }
+        /* Admin Page Styles */
+        .admin-table-container { height: 100%; overflow-y: auto; border-radius: 15px; }
+        .admin-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 0.85rem; }
         .admin-table th {
-            text-align: right; padding: 10px; color: #666; font-weight: bold;
+            text-align: right; padding: 12px; color: #64748b; font-weight: bold;
             position: sticky; top: 0; background: #e0e5ec; z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
-        .admin-table td { background: #eef2f7; padding: 10px; border-bottom: 1px solid #fff; }
-        .admin-table tr td:first-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
-        .admin-table tr td:last-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+        .admin-table td { background: #f1f5f9; padding: 12px; border-bottom: 1px solid #fff; color: #334155; }
+        .admin-table tr td:first-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+        .admin-table tr td:last-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
         
         .stat-card {
-            background: #e0e5ec; box-shadow: var(--inset-shadow); border-radius: 15px;
-            padding: 15px; text-align: center; display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
+            background: #e0e5ec; box-shadow: var(--inset-shadow); border-radius: 20px;
+            padding: 20px; text-align: center; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; height: 100%;
         }
         
         .action-badge {
-            display: inline-block; padding: 2px 8px; border-radius: 12px;
-            font-size: 0.7rem; font-weight: bold;
+            display: inline-block; padding: 3px 10px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: bold;
         }
-        .bg-blue-100 { background-color: #dbeafe; color: #1e40af; }
-        .bg-green-100 { background-color: #dcfce7; color: #166534; }
-        .bg-purple-100 { background-color: #f3e8ff; color: #6b21a8; }
-        .bg-amber-100 { background-color: #fef3c7; color: #92400e; }
+        .bg-blue-100 { background-color: #dbeafe; color: #1e40af; } /* تصفح */
+        .bg-green-100 { background-color: #dcfce7; color: #166534; } /* تسبيح */
+        .bg-purple-100 { background-color: #f3e8ff; color: #6b21a8; } /* صوتيات */
+        .bg-amber-100 { background-color: #fef3c7; color: #92400e; } /* دخول */
+
+        .page-slide {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="antialiased">
+
+    <!-- شاشة التحميل (Splash Screen) -->
+    <div id="splash-screen">
+        <div class="neumo-outset w-24 h-24 rounded-full flex items-center justify-center mb-4 animate-bounce">
+            <span class="material-symbols-rounded text-5xl text-blue-500">mosque</span>
+        </div>
+        <h1 class="text-xl font-bold text-gray-600">أعمال الأيام</h1>
+        <p class="text-sm text-gray-400 mt-2">جاري تجهيز البيانات...</p>
+    </div>
 
     <!-- === مودال الملاحظة === -->
     <div id="daily-modal-backdrop" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/20 backdrop-blur-sm">
@@ -270,65 +314,67 @@
         </div>
     </div>
 
-    <!-- === لوحة تحكم المسؤول (الإحصائيات) === -->
-    <div id="admin-dashboard-modal" class="fixed inset-0 z-50 flex items-center justify-center p-2 bg-gray-900/20 backdrop-blur-sm">
-        <div class="w-full max-w-4xl p-6 neumo-outset rounded-[30px] bg-[#e0e5ec] my-4 space-y-6 h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center border-b pb-4 border-gray-300 shrink-0">
-                <h2 class="text-2xl font-bold text-blue-600 flex items-center gap-2">
+    <!-- === صفحة لوحة تحكم المسؤول (كاملة) === -->
+    <div id="admin-page-container" class="min-h-screen w-full flex items-start justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="w-full max-w-5xl space-y-6">
+            <!-- رأس الصفحة -->
+            <div class="neumo-outset p-4 rounded-[20px] flex justify-between items-center">
+                <h2 class="text-xl font-bold text-blue-600 flex items-center gap-2">
                     <span class="material-symbols-rounded">analytics</span>
-                    الإحصائيات الشاملة
+                    لوحة التحكم والإحصائيات
                 </h2>
-                <button id="close-admin-btn" class="neumo-outset-btn p-2 text-red-500 rounded-full">
-                    <span class="material-symbols-rounded">close</span>
+                <button id="close-admin-page" class="neumo-outset-btn px-4 py-2 text-red-500 font-bold gap-1">
+                    <span class="material-symbols-rounded">logout</span> خروج
                 </button>
             </div>
 
             <!-- بطاقات ملخص -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 shrink-0">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="stat-card">
-                    <p class="text-xs text-gray-500 mb-1">الزوار (IP)</p>
-                    <h3 id="stat-total-visitors" class="text-2xl font-bold text-blue-600">...</h3>
+                    <span class="material-symbols-rounded text-blue-400 text-3xl mb-2">group</span>
+                    <p class="text-xs text-gray-500 mb-1">الزوار الفريدون</p>
+                    <h3 id="stat-total-visitors" class="text-3xl font-bold text-blue-600">...</h3>
                 </div>
                 <div class="stat-card">
-                    <p class="text-xs text-gray-500 mb-1">إجمالي النقرات</p>
-                    <h3 id="stat-total-actions" class="text-2xl font-bold text-gray-800">...</h3>
+                    <span class="material-symbols-rounded text-gray-400 text-3xl mb-2">touch_app</span>
+                    <p class="text-xs text-gray-500 mb-1">إجمالي التفاعلات</p>
+                    <h3 id="stat-total-actions" class="text-3xl font-bold text-gray-800">...</h3>
                 </div>
                 <div class="stat-card">
+                    <span class="material-symbols-rounded text-green-400 text-3xl mb-2">hotel_class</span>
                     <p class="text-xs text-gray-500 mb-1">جلسات التسبيح</p>
-                    <h3 id="stat-tasbih-sessions" class="text-2xl font-bold text-green-600">...</h3>
+                    <h3 id="stat-tasbih-sessions" class="text-3xl font-bold text-green-600">...</h3>
                 </div>
                 <div class="stat-card">
-                    <p class="text-xs text-gray-500 mb-1">أحدث نشاط</p>
-                    <h3 id="stat-last-time" class="text-xs font-bold text-gray-500 mt-1">...</h3>
+                    <span class="material-symbols-rounded text-amber-400 text-3xl mb-2">login</span>
+                    <p class="text-xs text-gray-500 mb-1">زيارات اليوم</p>
+                    <h3 id="stat-today-visits" class="text-3xl font-bold text-amber-600">...</h3>
                 </div>
             </div>
 
-            <!-- جدول السجلات -->
-            <div class="flex-1 overflow-hidden flex flex-col">
-                <div class="flex justify-between items-center mb-2">
-                    <h4 class="font-bold text-gray-700">سجل التحركات (أحدث 100)</h4>
-                    <div class="flex gap-2">
-                        <button onclick="window.logAppAction('اختبار', 'فحص الاتصال يدوياً')" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">
-                            فحص الاتصال
-                        </button>
-                        <button onclick="window.loadAnalyticsData()" class="text-xs text-blue-500 hover:underline flex items-center">
-                            <span class="material-symbols-rounded text-sm">refresh</span> تحديث
-                        </button>
-                    </div>
+            <!-- قسم الجدول -->
+            <div class="neumo-outset p-4 rounded-[30px] h-[60vh] flex flex-col">
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <h4 class="font-bold text-gray-700 flex items-center gap-2">
+                        <span class="material-symbols-rounded text-gray-400">history</span>
+                        سجل النشاطات المباشر
+                    </h4>
+                    <button onclick="window.loadAnalyticsData()" class="neumo-outset-btn px-3 py-1 text-sm text-blue-500">
+                        <span class="material-symbols-rounded text-base mr-1">refresh</span> تحديث
+                    </button>
                 </div>
-                <div class="neumo-inset p-2 rounded-xl admin-table-container flex-1 custom-scrollbar">
+                <div class="neumo-inset p-2 flex-1 admin-table-container custom-scrollbar">
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th class="w-24">الوقت</th>
-                                <th class="w-24">IP / الجهاز</th>
-                                <th class="w-32">المدينة</th>
-                                <th>نوع النشاط</th>
-                                <th>التفاصيل</th>
+                                <th class="w-28">التوقيت</th>
+                                <th class="w-32">الموقع</th>
+                                <th>النشاط</th>
+                                <th class="hidden md:table-cell">الجهاز / IP</th>
                             </tr>
                         </thead>
                         <tbody id="analytics-table-body">
-                            <tr><td colspan="5" class="text-center text-gray-500 p-4">جاري الاتصال...</td></tr>
+                            <tr><td colspan="4" class="text-center text-gray-500 p-8">جاري تحميل البيانات...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -337,7 +383,7 @@
     </div>
 
     <!-- === الحاوية الرئيسية === -->
-    <div id="main-container" class="min-h-screen w-full flex items-center justify-center p-4 py-6">
+    <div id="main-container" class="min-h-screen w-full flex items-center justify-center p-4 py-6 page-slide">
         <div class="w-full max-w-lg space-y-8">
             <!-- قسم أوقات الصلاة -->
             <div class="neumo-outset p-6 rounded-[30px] space-y-6 text-center relative overflow-hidden">
@@ -380,7 +426,8 @@
                     </h2>
                 </header>
                 <section>
-                    <div class="flex flex-wrap justify-center gap-4 text-center">
+                    <div class="flex flex-wrap justify-center gap-4 text-center" id="days-grid">
+                        <!-- يتم توليد الأيام هنا أو استخدام الـ HTML الثابت -->
                         <!-- أيام الأسبوع -->
                         <div class="day-wrapper flex flex-col items-center gap-2 day-button cursor-pointer group" data-day="الجمعة">
                             <div class="w-16 h-16 md:w-20 md:h-20 day-circle text-sm font-bold text-gray-600">الجمعة</div>
@@ -436,13 +483,14 @@
     </div>
 
     <!-- === صفحة التفاصيل (مخفية) === -->
-    <div id="day-page-container" class="min-h-screen w-full flex items-start justify-center p-4 hidden opacity-0 transition-opacity duration-300 py-8">
+    <div id="day-page-container" class="min-h-screen w-full flex items-start justify-center p-4 hidden opacity-0 transition-opacity duration-300 py-8 page-slide">
         <div class="w-full max-w-4xl p-6 md:p-8 space-y-6 neumo-outset rounded-[30px]">
             <div class="flex items-center justify-between">
                 <button id="back-button" class="neumo-outset-btn px-6 py-2 text-gray-600 font-bold gap-2">
                     <span class="material-symbols-rounded">arrow_forward</span>
                     رجوع
                 </button>
+                <div class="text-sm text-gray-400 font-bold" id="page-header-date"></div>
             </div>
             <h2 id="page-title" class="text-2xl font-bold text-center text-blue-600 pb-2 border-b border-gray-200"></h2>
             <div id="page-content" class="space-y-4 pt-2"></div>
@@ -455,9 +503,6 @@
         <span class="material-symbols-rounded">content_copy</span>
         <span>تم النسخ!</span>
     </div>
-
-    <!-- صوت النقر للمسبحة -->
-    <audio id="tasbih-click-sound" src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAAHAAACnwABBwsMDxATFhgbHR8iJSksLzIzNjk8QEJGSEtOUFFVWVxdYWJkZmhqbW9xdHZ5fH6Ag4aJi46QkpWYmZqcn6CkpqqrrrC0trm8v8HDxsnLztHT1tjb3d/h5Obp7O7w8vX3+fv9//uQZAAPAAADSAAAAABAAAAAAAAAAAAAgAAAAAAAAAAAAAAABAAA//uQZAAPAAADSAAAAABAAAAAAAAAAAAAgAAAAAAAAAAAAAAABAAA//uQZAAPAAADSAAAAABAAAAAAAAAAAAAgAAAAAAAAAAAAAAABAAA//uQZAAPAAADSAAAAABAAAAAAAAAAAAAgAAAAAAAAAAAAAAABAAA//uQZAAPAAADSAAAAABAAAAAAAAAAAAAgAAAAAAAAAAAAAAABAAA//uQZAAPAAADSAAAAABAAAAAAAAAAAAAgAAAAAAAAAAAAAAABAAA//uQZAAPAAADSAAAAABAAAAAAAAAAAAAgAAAAAAAAAAAAAAABAAA//uQZAAPAAADSAAAAABAAAAAAAAAAAAAgAAAAAAAAAAAAAAABAAA"></audio>
 
     <script>
         // --- Logger Function ---
@@ -496,9 +541,7 @@
                     timestamp: window.serverTimestamp(),
                     userAgent: navigator.userAgent
                 });
-                
                 console.log(`✅ تم التسجيل: ${category} - ${detail}`);
-
             } catch (e) {
                 console.error("❌ خطأ في التسجيل:", e);
             }
@@ -508,12 +551,12 @@
         window.loadAnalyticsData = async function() {
             const tableBody = document.getElementById('analytics-table-body');
             if (!window.db || !window.getDocs) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-center p-4">خطأ: قاعدة البيانات غير متصلة</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center p-4">خطأ: قاعدة البيانات غير متصلة</td></tr>';
                 return;
             }
 
             try {
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-center p-4">جاري جلب البيانات...</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center p-8 flex flex-col items-center gap-2"><span class="material-symbols-rounded animate-spin text-blue-500 text-3xl">sync</span><span>جاري جلب البيانات...</span></td></tr>';
                 
                 const q = window.query(
                     window.collection(window.db, 'app_analytics'),
@@ -524,13 +567,15 @@
                 const querySnapshot = await window.getDocs(q);
                 
                 if (querySnapshot.empty) {
-                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-500">القاعدة متصلة ولكن لا توجد سجلات بعد. تأكد من قواعد الأمان في Firebase.</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-500">لا توجد سجلات بعد.</td></tr>';
                     return;
                 }
 
                 let html = '';
                 let uniqueIPs = new Set();
                 let tasbihSessions = 0;
+                let todayVisits = 0;
+                const now = new Date();
 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
@@ -538,57 +583,96 @@
                     if(data.category === 'تسبيح') tasbihSessions++;
                     
                     const date = data.timestamp ? new Date(data.timestamp.seconds * 1000) : new Date();
-                    const timeStr = date.toLocaleTimeString('ar-EG');
+                    const timeStr = date.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
                     const dateStr = date.toLocaleDateString('ar-EG');
 
+                    // حساب زيارات اليوم
+                    if (date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
+                        if (data.category === 'دخول') todayVisits++;
+                    }
+
                     let badgeClass = "bg-gray-100 text-gray-800";
-                    if (data.category === 'تصفح') badgeClass = "bg-blue-100";
-                    if (data.category === 'تسبيح') badgeClass = "bg-green-100";
-                    if (data.category === 'صوتيات') badgeClass = "bg-purple-100";
-                    if (data.category === 'دخول') badgeClass = "bg-amber-100";
+                    let icon = "info";
+                    
+                    if (data.category === 'تصفح') { badgeClass = "bg-blue-100"; icon = "visibility"; }
+                    if (data.category === 'تسبيح') { badgeClass = "bg-green-100"; icon = "touch_app"; }
+                    if (data.category === 'صوتيات') { badgeClass = "bg-purple-100"; icon = "headphones"; }
+                    if (data.category === 'دخول') { badgeClass = "bg-amber-100"; icon = "login"; }
+                    if (data.category === 'موقع') { badgeClass = "bg-gray-100"; icon = "pin_drop"; }
 
                     html += `
                         <tr>
-                            <td class="text-xs text-gray-500" dir="ltr">${dateStr} <br> ${timeStr}</td>
-                            <td class="text-xs">
-                                <div class="font-mono text-blue-600">${data.ip || 'N/A'}</div>
-                                <div class="text-gray-400 text-[10px]">${data.device || '-'}</div>
+                            <td class="text-xs text-gray-500" dir="ltr">
+                                <div class="font-bold">${timeStr}</div>
+                                <div class="text-[10px]">${dateStr}</div>
                             </td>
                             <td class="text-xs font-bold text-gray-600">${data.location || 'غير محدد'}</td>
-                            <td><span class="action-badge ${badgeClass}">${data.category || 'عام'}</span></td>
-                            <td class="text-sm font-bold text-gray-800">${data.detail}</td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <span class="action-badge ${badgeClass} flex items-center gap-1">
+                                        <span class="material-symbols-rounded text-[10px]">${icon}</span>
+                                        ${data.category || 'عام'}
+                                    </span>
+                                    <span class="text-xs text-gray-700 truncate max-w-[120px] md:max-w-xs">${data.detail}</span>
+                                </div>
+                            </td>
+                            <td class="text-xs hidden md:table-cell">
+                                <div class="font-mono text-blue-600">${data.ip || 'N/A'}</div>
+                                <div class="text-gray-400 text-[9px]">${data.device || '-'}</div>
+                            </td>
                         </tr>
                     `;
                 });
                 
                 tableBody.innerHTML = html;
-                document.getElementById('stat-total-visitors').textContent = uniqueIPs.size;
-                document.getElementById('stat-total-actions').textContent = querySnapshot.size + (querySnapshot.size === 100 ? '+' : '');
-                document.getElementById('stat-tasbih-sessions').textContent = tasbihSessions;
                 
-                if (querySnapshot.docs.length > 0) {
-                    const last = querySnapshot.docs[0].data();
-                    const lastTime = last.timestamp ? new Date(last.timestamp.seconds * 1000).toLocaleTimeString('ar-EG') : '';
-                    document.getElementById('stat-last-time').textContent = `منذ: ${lastTime}`;
-                }
+                // تحديث البطاقات
+                animateCounter('stat-total-visitors', uniqueIPs.size);
+                animateCounter('stat-total-actions', querySnapshot.size + (querySnapshot.size === 100 ? '+' : ''));
+                animateCounter('stat-tasbih-sessions', tasbihSessions);
+                animateCounter('stat-today-visits', todayVisits);
 
             } catch (e) {
                 console.error(e);
-                let errorMsg = e.message;
-                if (e.code === 'permission-denied') errorMsg = "تم رفض الوصول (Permission Denied). يرجى تحديث قواعد الأمان في Firebase.";
-                if (e.code === 'failed-precondition') errorMsg = "قد يحتاج الاستعلام إلى فهرس (Index).";
-                tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-red-500 font-bold">خطأ: ${errorMsg}</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-red-500 font-bold">خطأ: ${e.message}</td></tr>`;
             }
         };
 
+        function animateCounter(id, endValue) {
+            const obj = document.getElementById(id);
+            if(isNaN(endValue)) { obj.textContent = endValue; return; }
+            let current = 0;
+            const step = Math.ceil(endValue / 20);
+            if (endValue === 0) { obj.textContent = "0"; return; }
+            
+            const timer = setInterval(() => {
+                current += step;
+                if (current >= endValue) {
+                    current = endValue;
+                    clearInterval(timer);
+                }
+                obj.textContent = current;
+            }, 30);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            // Splash Screen Logic
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.style.opacity = '0';
+                setTimeout(() => splash.style.display = 'none', 500);
+                highlightCurrentDay();
+            }, 1500);
+
+            // Admin Page Controls
             const adminBtn = document.getElementById('admin-access-btn');
             const pinModal = document.getElementById('admin-pin-modal');
             const pinInput = document.getElementById('admin-pin-input');
             const submitPinBtn = document.getElementById('submit-pin-btn');
             const cancelPinBtn = document.getElementById('cancel-pin-btn');
-            const dashboardModal = document.getElementById('admin-dashboard-modal');
-            const closeAdminBtn = document.getElementById('close-admin-btn');
+            const adminPageContainer = document.getElementById('admin-page-container');
+            const closeAdminPage = document.getElementById('close-admin-page');
+            const mainContainer = document.getElementById('main-container');
 
             adminBtn.addEventListener('click', () => {
                 pinModal.style.display = 'flex';
@@ -598,12 +682,22 @@
             cancelPinBtn.addEventListener('click', () => pinModal.style.display = 'none');
             submitPinBtn.addEventListener('click', checkPin);
             pinInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPin(); });
-            closeAdminBtn.addEventListener('click', () => dashboardModal.style.display = 'none');
+            
+            closeAdminPage.addEventListener('click', () => {
+                adminPageContainer.classList.add('opacity-0');
+                setTimeout(() => {
+                    adminPageContainer.classList.add('hidden');
+                    mainContainer.classList.remove('hidden');
+                    mainContainer.style.opacity = '1';
+                }, 300);
+            });
 
             function checkPin() {
                 if (pinInput.value === '1420') {
                     pinModal.style.display = 'none';
-                    dashboardModal.style.display = 'flex';
+                    mainContainer.classList.add('hidden'); // Hide main
+                    adminPageContainer.classList.remove('hidden');
+                    setTimeout(() => adminPageContainer.classList.remove('opacity-0'), 50);
                     window.loadAnalyticsData();
                 } else {
                     alert('الرمز خاطئ');
@@ -613,8 +707,8 @@
 
             let tasbihState = { mode: 'normal', count: 0, limit: null, zahraStage: 0, zahraCount: 0, currentZikrName: 'عام' };
             const zahraConfig = [{text:'الله أكبر',limit:34},{text:'الحمد لله',limit:33},{text:'سبحان الله',limit:33}];
-            const clickSound = document.getElementById('tasbih-click-sound');
-
+            
+            // --- إزالة الصوت والإبقاء على الاهتزاز ---
             window.setZikrMode = function(mode, text, countText) {
                 tasbihState.mode = mode; tasbihState.count = 0; tasbihState.limit = null;
                 tasbihState.currentZikrName = text || (mode === 'zahra' ? 'تسبيح الزهراء (ع)' : 'عام');
@@ -666,7 +760,7 @@
                 const label = document.getElementById('zikr-text');
                 if(!display) return;
 
-                if(clickSound) { clickSound.currentTime=0; clickSound.play().catch(e=>{}); }
+                // Only vibration now
                 if (navigator.vibrate) navigator.vibrate(30);
 
                 if (tasbihState.mode === 'normal') {
@@ -730,7 +824,6 @@
             const prayerTimesEls = { Fajr: document.getElementById('time-Fajr'), Dhuhr: document.getElementById('time-Dhuhr'), Maghrib: document.getElementById('time-Maghrib') };
             const prayerCards = { Fajr: document.getElementById('card-Fajr'), Dhuhr: document.getElementById('card-Dhuhr'), Maghrib: document.getElementById('card-Maghrib') };
             const dayButtons = document.querySelectorAll('.day-button');
-            const mainContainer = document.getElementById('main-container');
             const dayPageContainer = document.getElementById('day-page-container');
             const backButton = document.getElementById('back-button');
             const pageTitle = document.getElementById('page-title');
@@ -738,10 +831,11 @@
             const copyToast = document.getElementById('copy-toast');
             const copyHelper = document.getElementById('copy-helper');
 
+            // --- تم إزالة الرموز (صح وخطأ) من البيانات مع الحفاظ على المعنى والألوان ---
             const daysData = {
                 "الجمعة": {
                     sections: [
-                        { type: 'card', content: '✅ يوم صالح لشراء واقتناء وخياطة الثياب والملابس.', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: 'يوم صالح لشراء واقتناء وخياطة الثياب والملابس.', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
                         { type: 'card', content: '<ul class="list-disc list-inside space-y-2 pr-2 marker:text-blue-500"><li>يستحب فيه الغُسل قبل الزوال لصلاة الجمعة .</li><li>المقاربة الزوجية اليوم بعد فضيلة صلاة العصر مستحبة والمولود الحاصل عالم مشهور في العالم ، وكراهيتها قبل صلاة الظهر .</li><li>من أراد الحجامة فليحتجم الجمعة عصراً</li><li>تقليم الأظافر الجمعة ورد عن النبي (صلى الله عليه وآله): (تقليم الأظافر يوم الجمعه يؤمن الجذام ، والجنون ، والبرص ، والعمى ، وإن لم تحتج فحكها) .وفي خبر آخر يدر الرزق وهو أهم يوم لتقليم الأظافر فمن قلم أظافره يوم الجمعة اخرج الله منه الداء وأدخله فيه الدواء.</li></ul>' },
                         { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة عند طلوع الشمس وعند العشاء و رديئة ،عند العصر والضحى.' },
                         { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'اللهم صل على محمد وآل محمد وعجل فرجهم وأهلك عدوهم ، ياالله يا هو', subtext: 'العدد ( ١٠٠ ) مرة.' },
@@ -752,10 +846,10 @@
                 },
                 "السبت": {
                     sections: [
-                        { type: 'card', content: '❎ المقاربة الزوجية ( ليلة الأحد ) غير جيدة والمولود فيه يكون مشؤوما ثقيلاً.', style: 'text-red-600 font-semibold' },
-                        { type: 'card', content: '✅ يصح فيه ( الحجامة والفصد) .', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '❎ يكره تقليم الاظافر يوم السبت (من قلم أظافره يوم السبت وقعت الآكلة في أصابعه)', style: 'text-red-600 font-semibold' },
-                        { type: 'card', content: '❎ لا يصلح فيه شراء أو خياطة أو أقتناء الثياب والملابس.', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: 'المقاربة الزوجية ( ليلة الأحد ) غير جيدة والمولود فيه يكون مشؤوما ثقيلاً.', style: 'text-red-600 font-semibold bg-red-50 border-red-100' },
+                        { type: 'card', content: 'يصح فيه ( الحجامة والفصد) .', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'يكره تقليم الاظافر يوم السبت (من قلم أظافره يوم السبت وقعت الآكلة في أصابعه)', style: 'text-red-600 font-semibold bg-red-50 border-red-100' },
+                        { type: 'card', content: 'لا يصلح فيه شراء أو خياطة أو أقتناء الثياب والملابس.', style: 'text-red-600 font-semibold bg-red-50 border-red-100' },
                         { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة إلى الضحى والعصر و رديئة ،عند الزوال والعشاء .' },
                         { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يارب العالمين يا رحمن يا رحيم', subtext: '( ١٠٠ )مرة.' },
                         { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> المحبين + الشاكين + المطيعين لله' },
@@ -766,10 +860,10 @@
                 },
                 "الأحد": {
                     sections: [
-                        { type: 'card', content: '✅ المقاربة الزوجية جيدة والمولود الحاصل حافظا لکتاب الله.', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '✅ استحباب الحجامة . بعد الزوال .', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '❎ تقليم الأظافر غير جيد ، ويذهب البركه ، لما روي (من قلم أظافره يوم الأحد ذهبت البركه من يده) .', style: 'text-red-600 font-semibold' },
-                        { type: 'card', content: '❎ لا يصلح لشراء واقتناء وخياطة الثياب والملابس.', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: 'المقاربة الزوجية جيدة والمولود الحاصل حافظا لکتاب الله.', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'استحباب الحجامة . بعد الزوال .', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'تقليم الأظافر غير جيد ، ويذهب البركه ، لما روي (من قلم أظافره يوم الأحد ذهبت البركه من يده) .', style: 'text-red-600 font-semibold bg-red-50 border-red-100' },
+                        { type: 'card', content: 'لا يصلح لشراء واقتناء وخياطة الثياب والملابس.', style: 'text-red-600 font-semibold bg-red-50 border-red-100' },
                         { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة عند طلوع الشمس وعند العشاء و رديئة ،عند العصر والضحى' },
                         { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا ذا الجلال والاكرام يا واحد يا أحد', subtext: '( ١٠٠ )مرة.' },
                         { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> الخائفين + المتوسلين' },
@@ -780,10 +874,10 @@
                 },
                 "الاثنين": {
                     sections: [
-                        { type: 'card', content: '✅ يوم الإثنين يوم مناسب لتقليم الأظافر و له بركات من قبيل أنه يصبح قارئ و حافظ لكتاب الله الكريم.', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '✅ يصلح للمقاربة الزوجية . ليلاً', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '✅ من أراد الحجامة فليحتجم يوم الاثنين .', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '✅ يوم صالح لشراء واقتناء وخياطة الثياب والملابس.', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: 'يوم الإثنين يوم مناسب لتقليم الأظافر و له بركات من قبيل أنه يصبح قارئ و حافظ لكتاب الله الكريم.', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'يصلح للمقاربة الزوجية . ليلاً', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'من أراد الحجامة فليحتجم يوم الاثنين .', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'يوم صالح لشراء واقتناء وخياطة الثياب والملابس.', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
                         { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة ، حين طلوع الشمس والمغرب والعشاء' },
                         { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا قاضي الحاجات يا فرد يا صمد', subtext: '( ١٠٠ مرة )' },
                         { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> المفتقرين + الراجين' },
@@ -794,10 +888,10 @@
                 },
                 "الثلاثاء": {
                     sections: [
-                        { type: 'card', content: '✅ يوم صالح للحجامة والفصد.', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '✅ يوم صالح للمقاربة الزوجية .', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '❎ التقليم غير جيد ، يخاف الهلاك ، للمروي عن النبي( صلى الله عليه وآله): (من قلم أظافره يوم الثلاثاء يخاف الهلاك عليه).', style: 'text-red-600 font-semibold' },
-                        { type: 'card', content: '❎ لا يصلح لشراء وخياطة واقتناء الثياب والملابس .', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: 'يوم صالح للحجامة والفصد.', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'يوم صالح للمقاربة الزوجية .', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'التقليم غير جيد ، يخاف الهلاك ، للمروي عن النبي( صلى الله عليه وآله): (من قلم أظافره يوم الثلاثاء يخاف الهلاك عليه).', style: 'text-red-600 font-semibold bg-red-50 border-red-100' },
+                        { type: 'card', content: 'لا يصلح لشراء وخياطة واقتناء الثياب والملابس .', style: 'text-red-600 font-semibold bg-red-50 border-red-100' },
                         { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة عند الظهر والعشاء و رديئة عند الضحى والعصر' },
                         { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا أرحم الراحمين يا حي يا قيوم', subtext: 'العدد ( ١٠٠ ) مرة.' },
                         { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> الراغبين + العارفين .' },
@@ -808,10 +902,10 @@
                 },
                 "الأربعاء": {
                     sections: [
-                        { type: 'card', content: '❎ توقّوا الحجامة والنورة يوم الاربعاء . ليلاً', style: 'text-red-600 font-semibold' },
-                        { type: 'card', content: '✅ المقاربة الزوجية جيدة و المولود الحاصل عالم من العلماء أو حاكم من الحكام .', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '✅ خياطة أو أقتناء أو شراء الثياب والملابس فيها منفعة.', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '❎ تقليم الأظافر يوم الاربعاء غير جيد ويورث سوء الخلق ، كما جاء في بعض الأخبار عن أئمة أهل البيت عليهم السلام: (من قلم أظافره يوم الأربعاء يصير سيء الخلق) .', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: 'توقّوا الحجامة والنورة يوم الاربعاء . ليلاً', style: 'text-red-600 font-semibold bg-red-50 border-red-100' },
+                        { type: 'card', content: 'المقاربة الزوجية جيدة و المولود الحاصل عالم من العلماء أو حاكم من الحكام .', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'خياطة أو أقتناء أو شراء الثياب والملابس فيها منفعة.', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'تقليم الأظافر يوم الاربعاء غير جيد ويورث سوء الخلق ، كما جاء في بعض الأخبار عن أئمة أهل البيت عليهم السلام: (من قلم أظافره يوم الأربعاء يصير سيء الخلق) .', style: 'text-red-600 font-semibold bg-red-50 border-red-100' },
                         { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة عند الزوال و رديئة ،عند العصر.' },
                         { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا حي القيوم يا حنان يا منان', subtext: 'العدد ( ١٠٠ ) مرة.' },
                         { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> الذاكرين + الشاكرين' },
@@ -822,10 +916,10 @@
                 },
                 "الخميس": {
                     sections: [
-                        { type: 'card', content: '✅ المقاربة الزوجية ليلة الجمعة جيدة. والمولود فيه مرزوقاً طويل العمر . وصلحت سريرته وعاش سعيداً .', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '✅ يوم الخميس يوم مناسب جداً لتقليم الأظافر ، يجلب صحة الجسم و شفاء للآلام..', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '✅ استحباب الحجامة والفصد يوم الخميس.', style: 'text-green-700 font-semibold' },
-                        { type: 'card', content: '✅ يصلح فيه شراء أو خياطة أو أقتناء الثياب والملابس بل وردت أن فيها منفعة .', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: 'المقاربة الزوجية ليلة الجمعة جيدة. والمولود فيه مرزوقاً طويل العمر . وصلحت سريرته وعاش سعيداً .', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'يوم الخميس يوم مناسب جداً لتقليم الأظافر ، يجلب صحة الجسم و شفاء للآلام..', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'استحباب الحجامة والفصد يوم الخميس.', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
+                        { type: 'card', content: 'يصلح فيه شراء أو خياطة أو أقتناء الثياب والملابس بل وردت أن فيها منفعة .', style: 'text-green-700 font-semibold bg-green-50 border-green-100' },
                         { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة عند طلوع الشمس وعند العشاء و رديئة ،عند العصر والمغرب' },
                         { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'لا اله الا الله الملك الحق المبين ، يا ذا الجلال والاكرام', subtext: 'العدد ( ١٠٠ ) مرة.' },
                         { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> الزاهدين + المعتصمين' },
@@ -839,7 +933,6 @@
                         { type: 'tasbih_tool' }
                     ]
                 },
-                
                 "المناجاة الخمس عشرة": {
                     sections: [
                         { type: 'card', content: '<strong class="text-blue-600 text-lg">۞ المناجاة الخمس عشرة:</strong>' },
@@ -860,7 +953,6 @@
                         { type: 'audio', title: 'مناجاة الزاهدين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/tk33q7ozib7m.mp3' }
                     ]
                 },
-
                 "ادعية": {
                     sections: [
                         { type: 'card', content: '<strong class="text-blue-600 text-lg">۞ ادعية مختارة:</strong>' },
@@ -871,7 +963,6 @@
                         { type: 'audio', title: 'دعاء الصباح', url: 'https://shiavoice.com/media/edaie/du3a_seba7/rja2ng536rix.mp3' }
                     ]
                 },
-
                 "ادعية الجمعة": {
                     sections: [
                         { type: 'card', content: '<strong class="text-blue-600 text-lg">۞ ادعية الجمعة:</strong>' },
@@ -924,6 +1015,23 @@
                 }
             };
 
+            function highlightCurrentDay() {
+                const daysMap = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+                const todayIndex = new Date().getDay();
+                const todayName = daysMap[todayIndex];
+                
+                document.querySelectorAll('.day-button').forEach(btn => {
+                    const day = btn.getAttribute('data-day');
+                    if(day === todayName) {
+                        btn.classList.add('current-day-active');
+                        const circle = btn.querySelector('.day-circle');
+                        if(circle) {
+                            circle.classList.add('text-blue-600');
+                        }
+                    }
+                });
+            }
+
             function renderDayPage(dayName) {
                 const data = daysData[dayName];
                 if (!data) {
@@ -931,7 +1039,6 @@
                     return;
                 }
 
-                // تسجيل زيارة صفحة معينة
                 window.logAppAction("تصفح", `عرض صفحة: ${dayName}`);
 
                 let html = '';
@@ -939,7 +1046,7 @@
                     const style = section.style || 'text-gray-700';
                     switch (section.type) {
                         case 'card':
-                            html += `<div class="content-card bg-gray-100/50 p-4 rounded-xl border border-gray-200 ${style} shadow-sm">${section.content}</div>`;
+                            html += `<div class="content-card p-4 rounded-xl shadow-sm ${style}">${section.content}</div>`;
                             break;
                         case 'copyable':
                             html += `
@@ -967,72 +1074,30 @@
                                 </details>`;
                             break;
                         case 'tasbih_tool':
-                            // --- منطق استخراج ذكر وتسبيح اليوم ---
-                            const dayMap = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-                            const todayIdx = new Date().getDay();
-                            const todayName = dayMap[todayIdx];
-                            const todayData = daysData[todayName];
-                            
-                            let dailyDhikr = { text: 'لا يوجد', count: '' };
-                            let dailyTasbih = { text: 'لا يوجد', count: '' };
-
-                            if(todayData) {
-                                todayData.sections.forEach(s => {
-                                    if(s.title && s.title.includes('ذكر') && !s.title.includes('تسبيح')) {
-                                        dailyDhikr = { text: s.text, count: s.subtext || '' };
-                                    }
-                                    if(s.title && s.title.includes('تسبيح')) {
-                                        dailyTasbih = { text: s.text, count: s.subtext || '' };
-                                    }
-                                });
-                            }
-
                              html += `
                                 <div class="flex flex-col items-center justify-center space-y-8 py-8 animate-fade-in">
-                                    
-                                     <!-- Zikr Selector -->
                                      <div class="w-full max-w-md grid grid-cols-2 gap-3 text-sm font-bold mb-4">
-                                         <!-- زر تسبيح الزهراء الكبير -->
                                          <div class="col-span-2 neumo-outset zikr-option-btn cursor-pointer bg-blue-50/50" onclick="setZikrMode('zahra')">
                                             <span class="text-blue-600 text-lg mb-1">تسبيح الزهراء (ع)</span>
                                             <span class="text-xs text-gray-400 font-normal">34 الله أكبر - 33 الحمد لله - 33 سبحان الله</span>
                                          </div>
-
-                                         <!-- أزرار اليوم -->
-                                         <div class="neumo-outset zikr-option-btn cursor-pointer" onclick="setZikrMode('normal', '${dailyDhikr.text}', '${dailyDhikr.count}')">
-                                            <span class="text-gray-600 mb-1">📿 ذكر اليوم</span>
-                                            <span class="text-xs text-gray-400 font-normal truncate w-full" dir="rtl">${dailyDhikr.text}</span>
-                                         </div>
-                                         <div class="neumo-outset zikr-option-btn cursor-pointer" onclick="setZikrMode('normal', '${dailyTasbih.text}', '${dailyTasbih.count}')">
-                                            <span class="text-gray-600 mb-1">۞ تسبيح اليوم</span>
-                                            <span class="text-xs text-gray-400 font-normal truncate w-full" dir="rtl">${dailyTasbih.text}</span>
-                                         </div>
                                      </div>
-
-                                    <!-- Screen -->
                                     <div class="neumo-inset w-64 h-40 rounded-3xl flex flex-col items-center justify-center mb-4 relative overflow-hidden border-2 border-gray-100 px-4 text-center">
                                         <span id="zikr-text" class="text-gray-500 text-sm font-bold absolute top-4 w-full px-2">اختر ذكراً للبدء</span>
                                         <div class="flex items-baseline justify-center gap-2 mt-4 w-full">
                                             <span id="tasbih-count" class="text-7xl font-bold text-gray-700 font-[monospace] tracking-wider">0</span>
-                                            <!-- Remaining Count Badge -->
                                             <span id="tasbih-remaining" class="text-lg text-gray-400 font-bold hidden bg-gray-100 px-2 py-1 rounded-lg shadow-inner"></span>
                                         </div>
-                                        <!-- مؤشر لمراحل تسبيح الزهراء -->
                                         <div id="zahra-indicator" class="hidden flex gap-2 mt-2">
                                             <span id="ind-0" class="w-2 h-2 rounded-full bg-gray-300"></span>
                                             <span id="ind-1" class="w-2 h-2 rounded-full bg-gray-300"></span>
                                             <span id="ind-2" class="w-2 h-2 rounded-full bg-gray-300"></span>
                                         </div>
                                     </div>
-
-                                    <!-- Buttons Container -->
                                     <div class="flex items-center gap-12">
-                                        <!-- Reset -->
                                         <button onclick="resetTasbih()" class="neumo-outset-btn w-16 h-16 rounded-full text-red-400 hover:text-red-600 transition-colors" title="تصفير">
                                             <span class="material-symbols-rounded text-2xl">refresh</span>
                                         </button>
-
-                                        <!-- Count (Big) -->
                                         <button id="tasbih-btn" onclick="incrementTasbih()" class="tasbih-btn neumo-outset w-36 h-36 rounded-full flex items-center justify-center text-blue-500 active:scale-95 transition-transform duration-100 bg-gray-100">
                                             <div class="neumo-outset w-28 h-28 rounded-full flex items-center justify-center bg-[#e0e5ec]">
                                                 <span class="material-symbols-rounded text-6xl text-blue-500">touch_app</span>
@@ -1043,7 +1108,6 @@
                             `;
                             break;
                         case 'audio':
-                            // إنشاء معرف فريد لكل مشغل
                             const uniqueId = 'audio-' + Math.random().toString(36).substr(2, 9);
                             const playerHtml = `
                                 <div class="custom-player-card" id="player-card-${uniqueId}">
@@ -1079,8 +1143,6 @@
                     }
                 });
                 pageContent.innerHTML = html;
-                
-                // تفعيل مستمعي الأحداث الصوتية بعد تحميل المحتوى
                 setupAudioListeners();
             }
 
@@ -1142,7 +1204,6 @@
                 }, 1000);
             }
 
-            // --- وظائف مشغل الصوت --- //
             window.toggleAudio = function(id) {
                 const audio = document.getElementById(id);
                 const icon = document.getElementById(`icon-${id}`);
@@ -1150,7 +1211,7 @@
 
                 if (audio.paused) {
                     document.querySelectorAll('audio').forEach(a => {
-                        if (a.id !== id && a.id !== 'tasbih-click-sound' && !a.paused) {
+                        if (a.id !== id && !a.paused) {
                             a.pause();
                             const otherIcon = document.getElementById(`icon-${a.id}`);
                             if(otherIcon) otherIcon.textContent = 'play_arrow';
@@ -1175,7 +1236,6 @@
             function setupAudioListeners() {
                 const audios = document.querySelectorAll('audio');
                 audios.forEach(audio => {
-                    if(audio.id === 'tasbih-click-sound') return;
                     const id = audio.id;
                     const seekSlider = document.getElementById(`seek-${id}`);
                     const currTime = document.getElementById(`curr-${id}`);
@@ -1208,15 +1268,17 @@
                 return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
             };
 
-            // Navigation
             dayButtons.forEach(btn => {
                 btn.addEventListener('click', () => {
                     const dayName = btn.getAttribute('data-day');
                     pageTitle.textContent = dayName.includes('ادعية') || dayName.includes('المناجاة') ? dayName : `أعمال يوم ${dayName}`;
                     renderDayPage(dayName);
-                    mainContainer.classList.add('hidden');
-                    dayPageContainer.classList.remove('hidden');
-                    setTimeout(() => dayPageContainer.classList.remove('opacity-0'), 50);
+                    mainContainer.classList.add('opacity-0');
+                    setTimeout(() => {
+                        mainContainer.classList.add('hidden');
+                        dayPageContainer.classList.remove('hidden');
+                        setTimeout(() => dayPageContainer.classList.remove('opacity-0'), 50);
+                    }, 300);
                     window.scrollTo(0, 0);
                 });
             });
@@ -1226,9 +1288,8 @@
                 setTimeout(() => {
                     dayPageContainer.classList.add('hidden');
                     mainContainer.classList.remove('hidden');
-                    document.querySelectorAll('audio').forEach(a => { 
-                        if(a.id !== 'tasbih-click-sound') { a.pause(); a.currentTime = 0; }
-                    });
+                    setTimeout(() => mainContainer.classList.remove('opacity-0'), 50);
+                    document.querySelectorAll('audio').forEach(a => { a.pause(); a.currentTime = 0; });
                 }, 300);
             });
 
@@ -1252,5 +1313,4 @@
     </script>
 </body>
 </html>
-
 

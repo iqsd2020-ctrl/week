@@ -31,37 +31,37 @@
         };
         
         // تهيئة Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        
-        // تصدير المتغيرات
-        window.db = db;
-        window.collection = collection;
-        window.addDoc = addDoc;
-        window.query = query;
-        window.orderBy = orderBy;
-        window.limit = limit;
-        window.getDocs = getDocs;
-        window.serverTimestamp = serverTimestamp;
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            
+            // تصدير المتغيرات
+            window.db = db;
+            window.collection = collection;
+            window.addDoc = addDoc;
+            window.query = query;
+            window.orderBy = orderBy;
+            window.limit = limit;
+            window.getDocs = getDocs;
+            window.serverTimestamp = serverTimestamp;
 
-        // مراقبة حالة الدخول
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("المستخدم متصل:", user.uid);
-                window.currentUser = user;
-                // تسجيل الدخول فقط إذا لم يتم تسجيله في هذه الجلسة
-                if (!sessionStorage.getItem('session_logged')) {
-                    window.logAppAction("دخول", "فتح التطبيق (جلسة جديدة)");
-                    sessionStorage.setItem('session_logged', 'true');
+            // مراقبة حالة الدخول
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    window.currentUser = user;
+                    if (!sessionStorage.getItem('session_logged')) {
+                        window.logAppAction("دخول", "فتح التطبيق (جلسة جديدة)");
+                        sessionStorage.setItem('session_logged', 'true');
+                    }
+                } else {
+                    signInAnonymously(auth).catch((error) => console.error(error));
                 }
-            } else {
-                console.log("جاري تسجيل الدخول المجهول...");
-                signInAnonymously(auth).catch((error) => {
-                    console.error("فشل تسجيل الدخول:", error);
-                });
-            }
-        });
+            });
+        } catch (e) {
+            console.error("Firebase Init Error", e);
+        }
     </script>
 
     <style>
@@ -461,12 +461,10 @@
 
     <script>
         // --- Logger Function ---
-        // يستخدم مجموعة ثابتة 'app_analytics' لتجنب أي أخطاء في التسمية
         window.logAppAction = async function(category, detail) {
             if (!window.db) { console.warn("قاعدة البيانات غير جاهزة"); return; }
 
             try {
-                // IP Cache
                 let ip = localStorage.getItem('user_ip_cache') || 'غير معروف';
                 if (ip === 'غير معروف') {
                     fetch('https://api.ipify.org?format=json')
@@ -477,7 +475,6 @@
                         }).catch(err => {});
                 }
 
-                // Location Cache
                 let locationName = 'غير محدد';
                 const cachedLocation = localStorage.getItem('user_location_cache');
                 if(cachedLocation) {
@@ -584,9 +581,7 @@
             }
         };
 
-        // باقي كود التطبيق (UI, Prayer Times, Tasbih, etc.)
         document.addEventListener('DOMContentLoaded', () => {
-            // Admin Variables
             const adminBtn = document.getElementById('admin-access-btn');
             const pinModal = document.getElementById('admin-pin-modal');
             const pinInput = document.getElementById('admin-pin-input');
@@ -595,7 +590,6 @@
             const dashboardModal = document.getElementById('admin-dashboard-modal');
             const closeAdminBtn = document.getElementById('close-admin-btn');
 
-            // Admin Logic
             adminBtn.addEventListener('click', () => {
                 pinModal.style.display = 'flex';
                 pinInput.value = '';
@@ -617,7 +611,6 @@
                 }
             }
 
-            // --- Tasbih Logic ---
             let tasbihState = { mode: 'normal', count: 0, limit: null, zahraStage: 0, zahraCount: 0, currentZikrName: 'عام' };
             const zahraConfig = [{text:'الله أكبر',limit:34},{text:'الحمد لله',limit:33},{text:'سبحان الله',limit:33}];
             const clickSound = document.getElementById('tasbih-click-sound');
@@ -730,7 +723,6 @@
                 }
             };
 
-            // --- General App Logic (Copy/Paste from previous) ---
             const locationStatus = document.getElementById('location-status');
             const hijriDateDisplay = document.getElementById('hijri-date-display');
             const countdownTimer = document.getElementById('countdown-timer');
@@ -746,7 +738,6 @@
             const copyToast = document.getElementById('copy-toast');
             const copyHelper = document.getElementById('copy-helper');
 
-            // Data Definition (The same data as before)
             const daysData = {
                 "الجمعة": {
                     sections: [
@@ -759,49 +750,340 @@
                         { type: 'copyable', title: '📿 ذكر اليوم:', text: 'يا نور', subtext: 'العدد ( ٢٥٦ ) مرة.' }
                     ]
                 },
-                // ... (باقي بيانات الأيام كما هي) ...
-                "السبت": { sections: [{ type: 'card', content: '✅ يصح فيه ( الحجامة والفصد) .', style: 'text-green-700 font-semibold' }, { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يارب العالمين يا رحمن يا رحيم', subtext: '( ١٠٠ )مرة.' }, { type: 'copyable', title: '📿 ذكر يوم السبت:', text: 'يا غني', subtext: 'العدد ( ١٠٦٠ ) مرة‏' }]},
-                "الأحد": { sections: [{ type: 'card', content: '✅ المقاربة الزوجية جيدة.', style: 'text-green-700 font-semibold' }, { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا ذا الجلال والاكرام يا واحد يا أحد', subtext: '( ١٠٠ )مرة.' }, { type: 'copyable', title: '📿 ذكر يوم الأحد:', text: 'يا فتاح', subtext: 'العدد (٤٨٩) مرة' }]},
-                "الاثنين": { sections: [{ type: 'card', content: '✅ يوم صالح لشراء واقتناء وخياطة الثياب.', style: 'text-green-700 font-semibold' }, { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا قاضي الحاجات يا فرد يا صمد', subtext: '( ١٠٠ مرة )' }, { type: 'copyable', title: '📿 ذكر اليوم:', text: 'يا لطيف', subtext: 'العدد ( ١٢٩ ) مرة' }]},
-                "الثلاثاء": { sections: [{ type: 'card', content: '✅ يوم صالح للحجامة والفصد.', style: 'text-green-700 font-semibold' }, { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا أرحم الراحمين يا حي يا قيوم', subtext: 'العدد ( ١٠٠ ) مرة.' }, { type: 'copyable', title: '📿 ذكر اليوم:', text: 'يا قابض', subtext: 'العدد ( ٩٠٣ ) مرة' }]},
-                "الأربعاء": { sections: [{ type: 'card', content: '✅ خياطة الثياب فيها منفعة.', style: 'text-green-700 font-semibold' }, { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا حي القيوم يا حنان يا منان', subtext: 'العدد ( ١٠٠ ) مرة.' }, { type: 'copyable', title: '📿 ذكر اليوم:', text: 'يا متعال', subtext: 'العدد ( ٥٤١ ) مرة' }]},
-                "الخميس": { sections: [{ type: 'card', content: '✅ يوم مناسب جداً لتقليم الأظافر.', style: 'text-green-700 font-semibold' }, { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'لا اله الا الله الملك الحق المبين', subtext: 'العدد ( ١٠٠ ) مرة.' }, { type: 'copyable', title: '📿 ذكر اليوم:', text: 'يا رزاق', subtext: '٣٠٨ مرة' }]},
-                "المسبحة": { sections: [{ type: 'tasbih_tool' }]},
-                // ... باقي الأقسام (المناجاة والأدعية) تبقى كما هي في الكود الأصلي لتوفير المساحة ...
-                "المناجاة الخمس عشرة": { sections: [{ type: 'card', content: '۞ المناجاة الخمس عشرة' }, { type: 'audio', title: 'مناجاة التائبين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/ooo13w88n93y.mp3' }]},
-                "ادعية": { sections: [{ type: 'card', content: '۞ ادعية مختارة' }, { type: 'audio', title: 'دعاء الصباح', url: 'https://shiavoice.com/media/edaie/du3a_seba7/rja2ng536rix.mp3' }]},
-                "ادعية الجمعة": { sections: [{ type: 'card', content: '۞ ادعية الجمعة' }, { type: 'audio', title: 'دعاء الجمعة الأولى', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-1.mp3' }]}
+                "السبت": {
+                    sections: [
+                        { type: 'card', content: '❎ المقاربة الزوجية ( ليلة الأحد ) غير جيدة والمولود فيه يكون مشؤوما ثقيلاً.', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: '✅ يصح فيه ( الحجامة والفصد) .', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '❎ يكره تقليم الاظافر يوم السبت (من قلم أظافره يوم السبت وقعت الآكلة في أصابعه)', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: '❎ لا يصلح فيه شراء أو خياطة أو أقتناء الثياب والملابس.', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة إلى الضحى والعصر و رديئة ،عند الزوال والعشاء .' },
+                        { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يارب العالمين يا رحمن يا رحيم', subtext: '( ١٠٠ )مرة.' },
+                        { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> المحبين + الشاكين + المطيعين لله' },
+                        { type: 'card', content: '<strong>۞ زيارة اليوم :</strong> زيارة النبي الاكرم صلى الله عليه وآله وسلم .' },
+                        { type: 'details', title: '۞ صلاة اليوم:', content: 'روى السيد ابن طاووس عن الإمام العسكري عليه‌السلام قال : من صلّى يوم السبت أربع ركعات يقرأ في كل ركعة فاتحة الكتاب وقل هو الله أحد وآية الكرسي كتبه الله عزَّ وجلَّ في درجة النبيين والشهداء والصالحين وحسن أولئك رفيقا .' },
+                        { type: 'copyable', title: '📿 ذكر يوم السبت:', text: 'يا غني', subtext: 'العدد ( ١٠٦٠ ) مرة‏' }
+                    ]
+                },
+                "الأحد": {
+                    sections: [
+                        { type: 'card', content: '✅ المقاربة الزوجية جيدة والمولود الحاصل حافظا لکتاب الله.', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '✅ استحباب الحجامة . بعد الزوال .', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '❎ تقليم الأظافر غير جيد ، ويذهب البركه ، لما روي (من قلم أظافره يوم الأحد ذهبت البركه من يده) .', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: '❎ لا يصلح لشراء واقتناء وخياطة الثياب والملابس.', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة عند طلوع الشمس وعند العشاء و رديئة ،عند العصر والضحى' },
+                        { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا ذا الجلال والاكرام يا واحد يا أحد', subtext: '( ١٠٠ )مرة.' },
+                        { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> الخائفين + المتوسلين' },
+                        { type: 'card', content: '<strong>۞ زيارة اليوم :</strong> زيارة أَميرِ المُؤمِنين والسيدة الزَّهراءِ سَلامُ الله عَليهما' },
+                        { type: 'details', title: '۞ صلاة اليوم:', content: 'من صلى يوم الأحد أربع ركعات يقرء في كل ركعة بفاتحة الكتاب وآمن الرسول👇 مرة، كتب الله بعدد كل نصراني ونصرانية حسنات، وأعطاه الله تعالى ثواب الف نبي، وكتب له ألف حجة وعمرة وكتب له بكل ركعة ألف صلاة، وأعطاه الله في الجنة بكل حرف مدينة من مسك .' },
+                        { type: 'copyable', title: '📿 ذكر يوم الأحد:', text: 'يا فتاح', subtext: 'العدد (٤٨٩) مرة' }
+                    ]
+                },
+                "الاثنين": {
+                    sections: [
+                        { type: 'card', content: '✅ يوم الإثنين يوم مناسب لتقليم الأظافر و له بركات من قبيل أنه يصبح قارئ و حافظ لكتاب الله الكريم.', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '✅ يصلح للمقاربة الزوجية . ليلاً', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '✅ من أراد الحجامة فليحتجم يوم الاثنين .', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '✅ يوم صالح لشراء واقتناء وخياطة الثياب والملابس.', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة ، حين طلوع الشمس والمغرب والعشاء' },
+                        { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا قاضي الحاجات يا فرد يا صمد', subtext: '( ١٠٠ مرة )' },
+                        { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> المفتقرين + الراجين' },
+                        { type: 'card', content: '<strong>۞ زيارة اليوم :</strong> زيارة الإمامين الحسن والحسين عليهما السلام' },
+                        { type: 'details', title: '۞ صلاة اليوم:', content: 'روى السيد ابن طاووس عن الإمام العسكري عليه‌السلام قال : من صلّى يوم الاثنين عشر ركعات يقرأ في كل ركعة فاتحة الكتاب وقل هو الله أحد عشراً جعل اللّه له إلى يوم الجمعة نوراً يضي منه الموقف حتى يغبطه به جميع من خلق الله في ذلك اليوم .' },
+                        { type: 'copyable', title: '📿 ذكر اليوم:', text: 'يا لطيف', subtext: 'العدد ( ١٢٩ ) مرة' }
+                    ]
+                },
+                "الثلاثاء": {
+                    sections: [
+                        { type: 'card', content: '✅ يوم صالح للحجامة والفصد.', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '✅ يوم صالح للمقاربة الزوجية .', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '❎ التقليم غير جيد ، يخاف الهلاك ، للمروي عن النبي( صلى الله عليه وآله): (من قلم أظافره يوم الثلاثاء يخاف الهلاك عليه).', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: '❎ لا يصلح لشراء وخياطة واقتناء الثياب والملابس .', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة عند الظهر والعشاء و رديئة عند الضحى والعصر' },
+                        { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا أرحم الراحمين يا حي يا قيوم', subtext: 'العدد ( ١٠٠ ) مرة.' },
+                        { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> الراغبين + العارفين .' },
+                        { type: 'card', content: '<strong>۞ زيارة اليوم :</strong> زيارة علي بن الحسين السجاد ومحمد بن علي الباقر ، وجعفر بن محمد الصادق' },
+                        { type: 'details', title: '۞ صلاة اليوم:', content: 'روى السيد ابن طاووس عن الإمام العسكري عليه‌السلام قال : من صلّى يوم الثلاثاء ست ركعات يقرأ في كل ركعة فاتحة الكتاب وآية : آمن الرسول إلى آخرها وسورة إذا زلزلت مرة واحدة غفر الله له ذنوبه حتى يخرج منها كيوم ولدته أمّه.' },
+                        { type: 'copyable', title: '📿 ذكر اليوم:', text: 'يا قابض', subtext: 'العدد ( ٩٠٣ ) مرة' }
+                    ]
+                },
+                "الأربعاء": {
+                    sections: [
+                        { type: 'card', content: '❎ توقّوا الحجامة والنورة يوم الاربعاء . ليلاً', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: '✅ المقاربة الزوجية جيدة و المولود الحاصل عالم من العلماء أو حاكم من الحكام .', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '✅ خياطة أو أقتناء أو شراء الثياب والملابس فيها منفعة.', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '❎ تقليم الأظافر يوم الاربعاء غير جيد ويورث سوء الخلق ، كما جاء في بعض الأخبار عن أئمة أهل البيت عليهم السلام: (من قلم أظافره يوم الأربعاء يصير سيء الخلق) .', style: 'text-red-600 font-semibold' },
+                        { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة عند الزوال و رديئة ،عند العصر.' },
+                        { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'يا حي القيوم يا حنان يا منان', subtext: 'العدد ( ١٠٠ ) مرة.' },
+                        { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> الذاكرين + الشاكرين' },
+                        { type: 'card', content: '<strong>۞ زيارة اليوم :</strong> زيارة الائمة عليهم السلام موسى بن جعفر الكاظم، وعلي بن موسى الرضا، ومحمد علي جواد ، وعلي بن محمد الهادي ( عليهم السلام جميعاً)' },
+                        { type: 'details', title: '۞ صلاة اليوم:', content: 'روى السيد ابن طاووس عن الإمام العسكري عليه‌السلام قال : من صلى يوم الأربعاء أربع ركعات يقرأ في كل ركعة الحمد والاخلاص وسورة القدر مرة واحدة تاب الله عليه من كل ذنب وزوّجه بزوجة من الحور العين.' },
+                        { type: 'copyable', title: '📿 ذكر اليوم:', text: 'يا متعال', subtext: 'العدد ( ٥٤١ ) مرة' }
+                    ]
+                },
+                "الخميس": {
+                    sections: [
+                        { type: 'card', content: '✅ المقاربة الزوجية ليلة الجمعة جيدة. والمولود فيه مرزوقاً طويل العمر . وصلحت سريرته وعاش سعيداً .', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '✅ يوم الخميس يوم مناسب جداً لتقليم الأظافر ، يجلب صحة الجسم و شفاء للآلام..', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '✅ استحباب الحجامة والفصد يوم الخميس.', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '✅ يصلح فيه شراء أو خياطة أو أقتناء الثياب والملابس بل وردت أن فيها منفعة .', style: 'text-green-700 font-semibold' },
+                        { type: 'card', content: '<strong>🕛 وقت الاستخارة:</strong> جيدة عند طلوع الشمس وعند العشاء و رديئة ،عند العصر والمغرب' },
+                        { type: 'copyable', title: '۞ تسبيح اليوم:', text: 'لا اله الا الله الملك الحق المبين ، يا ذا الجلال والاكرام', subtext: 'العدد ( ١٠٠ ) مرة.' },
+                        { type: 'card', content: '<strong>۞ مناجاة اليوم:</strong> الزاهدين + المعتصمين' },
+                        { type: 'card', content: '<strong>۞ زيارة اليوم :</strong> زيارة الإمام الحسن بن علي العسكري عليهما السلام .' },
+                        { type: 'details', title: '۞ صلاة اليوم:', content: 'روي عن النبي ( صلى الله عليه و آله ) انه قال : من صلى يوم الخميس اربع ركعات ، يقرأ في الاولى منهن الحمد مرة و احدى عشر مرة قل هو الله احد ، و في الثانية الحمد مرة واحدى و عشرين مرة قل هو الله احد ، و في الثالثة الحمد مرة و واحدى و ثلاثين مرة قل هو الله احد ، و في الرابعة الحمد مرة و احدى و اربعين مرة قل هو الله احد ، كل ركعتين بتسليم ، فاذا سلم في الرابعة قرأ قل هو الله احد احدى و خمسين مرة ، و قال اللهم صل على محمد و آل محمد احدى و خمسين مرة ثم يسجد و يقول في سجوده ( يا الله ) مائة مرة ، و تدعو بما شئت .' },
+                        { type: 'copyable', title: '📿 ذكر اليوم:', text: 'يا رزاق', subtext: '٣٠٨ مرة' }
+                    ]
+                },
+                "المسبحة": {
+                    sections: [
+                        { type: 'tasbih_tool' }
+                    ]
+                },
+                
+                "المناجاة الخمس عشرة": {
+                    sections: [
+                        { type: 'card', content: '<strong class="text-blue-600 text-lg">۞ المناجاة الخمس عشرة:</strong>' },
+                        { type: 'audio', title: 'مناجاة التائبين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/ooo13w88n93y.mp3' },
+                        { type: 'audio', title: 'مناجاة الشاكين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/xsc2pjijopwh.mp3' },
+                        { type: 'audio', title: 'مناجاة الخائفين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/wxd55umyeb0j.mp3' },
+                        { type: 'audio', title: 'مناجاة الراجين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/smd8w0wkk1ut.mp3' },
+                        { type: 'audio', title: 'مناجاة الراغبين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/krn1mtnex9pg.mp3' },
+                        { type: 'audio', title: 'مناجاة الشاكرين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/rqgsi180c95h.mp3' },
+                        { type: 'audio', title: 'مناجاة المطيعين لله', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/dkewntv844en.mp3' },
+                        { type: 'audio', title: 'مناجاة المريدين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/evo3qhfar821.mp3' },
+                        { type: 'audio', title: 'مناجاة المحبين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/kkwzkdw21gfp.mp3' },
+                        { type: 'audio', title: 'مناجاة المتوسلين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/gxni80636gbh.mp3' },
+                        { type: 'audio', title: 'مناجاة المفتقرين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/foemdaja6c88.mp3' },
+                        { type: 'audio', title: 'مناجاة العارفين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/vqvw6yp3ha36.mp3' },
+                        { type: 'audio', title: 'مناجاة الذاكرين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/ind9dmnkdbw5.mp3' },
+                        { type: 'audio', title: 'مناجاة المعتصمين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/rxprxn0g3dt5.mp3' },
+                        { type: 'audio', title: 'مناجاة الزاهدين', url: 'https://shiavoice.com/media/edaie/munajat_imam_sejad/mu7amed_el7ujerat/tk33q7ozib7m.mp3' }
+                    ]
+                },
+
+                "ادعية": {
+                    sections: [
+                        { type: 'card', content: '<strong class="text-blue-600 text-lg">۞ ادعية مختارة:</strong>' },
+                        { type: 'audio', title: 'دعاء الافتتاح', url: 'https://shiavoice.com/media/edaie/asdarat/mohammed_elhujerat/rewa3_ed3ie/miy1dpzafhkv.mp3' },
+                        { type: 'audio', title: 'دعاء العهد', url: 'https://shiavoice.com/media/edaie/asdarat/mohammed_elhujerat/rewa3_ed3ie/fhbi9i9shpgd.mp3' },
+                        { type: 'audio', title: 'دعاء الندبة', url: 'https://shiavoice.com/media/edaie/du3a_nudbe/yhd6n5mgs3nu.mp3' },
+                        { type: 'audio', title: 'دعاء السمات', url: 'https://shiavoice.com/media/edaie/du3a_elsmat/rn1rakrexfsi.mp3' },
+                        { type: 'audio', title: 'دعاء الصباح', url: 'https://shiavoice.com/media/edaie/du3a_seba7/rja2ng536rix.mp3' }
+                    ]
+                },
+
+                "ادعية الجمعة": {
+                    sections: [
+                        { type: 'card', content: '<strong class="text-blue-600 text-lg">۞ ادعية الجمعة:</strong>' },
+                        { type: 'audio', title: 'دعاء الجمعة الأولى', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-1.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثانية', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-2.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثالثة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-3.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الرابعة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-4.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الخامسة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-5.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة السادسة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-6.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة السابعة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-7.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثامنة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-8.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة التاسعة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-9.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة العاشرة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-10.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الحادية عشرة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-11.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثانية عشرة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-12.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثالثة عشرة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-13.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الرابعة عشرة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-14.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الخامسة عشرة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-15.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة السادسة عشرة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-16.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة السابعة عشرة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-17.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثامنة عشرة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-18.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة التاسعة عشرة', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-19.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة العشرون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-20.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الحادية والعشرون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-21.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثانية والعشرون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-22.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثالثة والعشرون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-23.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الرابعة والعشرون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-24.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الخامسة والعشرون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-25.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة السادسة والعشرون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-26.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة السابعة والعشرون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-27.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثامنة والعشرون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-28.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة التاسعة والعشرون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-29.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثلاثون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-30.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الحادية والثلاثون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-31.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثانية والثلاثون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-32.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثالثة والثلاثون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-33.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الرابعة والثلاثون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-34.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الخامسة والثلاثون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-35.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة السادسة والثلاثون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-36.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة السابعة والثلاثون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-37.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثامنة والثلاثون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-38.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة التاسعة والثلاثون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-39.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الأربعون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-40.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الحادية والأربعون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-41.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثانية والأربعون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-42.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الثالثة والأربعون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-43.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الرابعة والأربعون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-44.mp3' },
+                        { type: 'audio', title: 'دعاء الجمعة الخامسة والأربعون', url: 'https://alsaydalsadr.app/wp-content/uploads/2024/11/adeyhmp3-45.mp3' }
+                    ]
+                }
             };
 
             function renderDayPage(dayName) {
                 const data = daysData[dayName];
-                if (!data) { pageContent.innerHTML = '<p class="text-center text-gray-500">لا يوجد محتوى.</p>'; return; }
+                if (!data) {
+                    pageContent.innerHTML = '<p class="text-center text-gray-500">لا يوجد محتوى.</p>';
+                    return;
+                }
+
+                // تسجيل زيارة صفحة معينة
                 window.logAppAction("تصفح", `عرض صفحة: ${dayName}`);
-                
-                // ... (نفس منطق renderDayPage السابق لبناء HTML) ...
-                // ملاحظة: تم اختصار تكرار الكود هنا، تأكد من استخدام دالة renderDayPage الكاملة من الرد السابق إذا نسخت هذا الجزء
-                // هذا مجرد مثال مختصر لتوضيح الدمج:
+
                 let html = '';
                 data.sections.forEach(section => {
-                    if(section.type === 'card') html += `<div class="content-card bg-gray-100/50 p-4 rounded-xl border ${section.style}">${section.content}</div>`;
-                    if(section.type === 'copyable') html += `<div class="content-card bg-white p-5 rounded-xl border"><h4 class="font-bold text-blue-600">${section.title}</h4><p class="text-lg mt-2">${section.text}</p><button class="copy-btn mt-2 text-blue-500" data-text="${section.text}">نسخ</button></div>`;
-                    if(section.type === 'tasbih_tool') {
-                        // Logic for Tasbih (Same as provided before)
-                        // For brevity in this merged block, assuming full HTML structure from previous response
-                        html += `<div class="text-center p-4">أداة المسبحة (راجع الكود الكامل للتفاصيل)</div>`;
-                    }
-                    if(section.type === 'audio') {
-                         const uniqueId = 'audio-' + Math.random().toString(36).substr(2, 9);
-                         html += `<div class="custom-player-card"><audio id="${uniqueId}" src="${section.url}" preload="none" onplay="window.logAppAction('صوتيات', 'تشغيل: ${section.title}')"></audio><button class="play-btn" onclick="toggleAudio('${uniqueId}')">▶</button></div>`;
+                    const style = section.style || 'text-gray-700';
+                    switch (section.type) {
+                        case 'card':
+                            html += `<div class="content-card bg-gray-100/50 p-4 rounded-xl border border-gray-200 ${style} shadow-sm">${section.content}</div>`;
+                            break;
+                        case 'copyable':
+                            html += `
+                                <div class="content-card bg-white p-5 rounded-xl border border-gray-100 shadow-sm group relative">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h4 class="text-lg font-bold text-blue-600 flex items-center gap-2">
+                                            <span class="material-symbols-rounded">stars</span>
+                                            ${section.title}
+                                        </h4>
+                                        <button class="copy-btn p-2 rounded-full hover:bg-blue-50 text-blue-500 transition-colors" data-text="${section.text}">
+                                            <span class="material-symbols-rounded">content_copy</span>
+                                        </button>
+                                    </div>
+                                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-2">
+                                        <p class="text-lg leading-loose font-medium text-gray-800" dir="rtl">${section.text}</p>
+                                    </div>
+                                    <p class="text-xs text-gray-400">${section.subtext}</p>
+                                </div>`;
+                            break;
+                        case 'details':
+                            html += `
+                                <details>
+                                    <summary>${section.title}</summary>
+                                    <div class="details-content">${section.content}</div>
+                                </details>`;
+                            break;
+                        case 'tasbih_tool':
+                            // --- منطق استخراج ذكر وتسبيح اليوم ---
+                            const dayMap = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+                            const todayIdx = new Date().getDay();
+                            const todayName = dayMap[todayIdx];
+                            const todayData = daysData[todayName];
+                            
+                            let dailyDhikr = { text: 'لا يوجد', count: '' };
+                            let dailyTasbih = { text: 'لا يوجد', count: '' };
+
+                            if(todayData) {
+                                todayData.sections.forEach(s => {
+                                    if(s.title && s.title.includes('ذكر') && !s.title.includes('تسبيح')) {
+                                        dailyDhikr = { text: s.text, count: s.subtext || '' };
+                                    }
+                                    if(s.title && s.title.includes('تسبيح')) {
+                                        dailyTasbih = { text: s.text, count: s.subtext || '' };
+                                    }
+                                });
+                            }
+
+                             html += `
+                                <div class="flex flex-col items-center justify-center space-y-8 py-8 animate-fade-in">
+                                    
+                                     <!-- Zikr Selector -->
+                                     <div class="w-full max-w-md grid grid-cols-2 gap-3 text-sm font-bold mb-4">
+                                         <!-- زر تسبيح الزهراء الكبير -->
+                                         <div class="col-span-2 neumo-outset zikr-option-btn cursor-pointer bg-blue-50/50" onclick="setZikrMode('zahra')">
+                                            <span class="text-blue-600 text-lg mb-1">تسبيح الزهراء (ع)</span>
+                                            <span class="text-xs text-gray-400 font-normal">34 الله أكبر - 33 الحمد لله - 33 سبحان الله</span>
+                                         </div>
+
+                                         <!-- أزرار اليوم -->
+                                         <div class="neumo-outset zikr-option-btn cursor-pointer" onclick="setZikrMode('normal', '${dailyDhikr.text}', '${dailyDhikr.count}')">
+                                            <span class="text-gray-600 mb-1">📿 ذكر اليوم</span>
+                                            <span class="text-xs text-gray-400 font-normal truncate w-full" dir="rtl">${dailyDhikr.text}</span>
+                                         </div>
+                                         <div class="neumo-outset zikr-option-btn cursor-pointer" onclick="setZikrMode('normal', '${dailyTasbih.text}', '${dailyTasbih.count}')">
+                                            <span class="text-gray-600 mb-1">۞ تسبيح اليوم</span>
+                                            <span class="text-xs text-gray-400 font-normal truncate w-full" dir="rtl">${dailyTasbih.text}</span>
+                                         </div>
+                                     </div>
+
+                                    <!-- Screen -->
+                                    <div class="neumo-inset w-64 h-40 rounded-3xl flex flex-col items-center justify-center mb-4 relative overflow-hidden border-2 border-gray-100 px-4 text-center">
+                                        <span id="zikr-text" class="text-gray-500 text-sm font-bold absolute top-4 w-full px-2">اختر ذكراً للبدء</span>
+                                        <div class="flex items-baseline justify-center gap-2 mt-4 w-full">
+                                            <span id="tasbih-count" class="text-7xl font-bold text-gray-700 font-[monospace] tracking-wider">0</span>
+                                            <!-- Remaining Count Badge -->
+                                            <span id="tasbih-remaining" class="text-lg text-gray-400 font-bold hidden bg-gray-100 px-2 py-1 rounded-lg shadow-inner"></span>
+                                        </div>
+                                        <!-- مؤشر لمراحل تسبيح الزهراء -->
+                                        <div id="zahra-indicator" class="hidden flex gap-2 mt-2">
+                                            <span id="ind-0" class="w-2 h-2 rounded-full bg-gray-300"></span>
+                                            <span id="ind-1" class="w-2 h-2 rounded-full bg-gray-300"></span>
+                                            <span id="ind-2" class="w-2 h-2 rounded-full bg-gray-300"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Buttons Container -->
+                                    <div class="flex items-center gap-12">
+                                        <!-- Reset -->
+                                        <button onclick="resetTasbih()" class="neumo-outset-btn w-16 h-16 rounded-full text-red-400 hover:text-red-600 transition-colors" title="تصفير">
+                                            <span class="material-symbols-rounded text-2xl">refresh</span>
+                                        </button>
+
+                                        <!-- Count (Big) -->
+                                        <button id="tasbih-btn" onclick="incrementTasbih()" class="tasbih-btn neumo-outset w-36 h-36 rounded-full flex items-center justify-center text-blue-500 active:scale-95 transition-transform duration-100 bg-gray-100">
+                                            <div class="neumo-outset w-28 h-28 rounded-full flex items-center justify-center bg-[#e0e5ec]">
+                                                <span class="material-symbols-rounded text-6xl text-blue-500">touch_app</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                            break;
+                        case 'audio':
+                            // إنشاء معرف فريد لكل مشغل
+                            const uniqueId = 'audio-' + Math.random().toString(36).substr(2, 9);
+                            const playerHtml = `
+                                <div class="custom-player-card" id="player-card-${uniqueId}">
+                                    <audio id="${uniqueId}" src="${section.url}" preload="none" onplay="window.logAppAction('صوتيات', 'تشغيل: ${section.title}')"></audio>
+                                    <button class="play-btn" onclick="toggleAudio('${uniqueId}')">
+                                        <span class="material-symbols-rounded text-2xl" id="icon-${uniqueId}">play_arrow</span>
+                                    </button>
+                                    <div class="w-full flex flex-col justify-center">
+                                        <input type="range" class="custom-seek" id="seek-${uniqueId}" value="0" max="100" oninput="seekAudio('${uniqueId}', this.value)">
+                                        <div class="flex justify-between text-[10px] text-gray-500 mt-1 px-1 font-bold">
+                                            <span id="curr-${uniqueId}">00:00</span>
+                                            <span id="dur-${uniqueId}">00:00</span>
+                                        </div>
+                                    </div>
+                                </div>`;
+
+                            if (dayName.includes('ادعية') || dayName.includes('المناجاة')) {
+                                html += `
+                                    <details>
+                                        <summary class="font-semibold text-gray-700">${section.title}</summary>
+                                        <div class="details-content pt-0 pb-2">
+                                            ${playerHtml}
+                                        </div>
+                                    </details>`;
+                            } else {
+                                html += `
+                                    <div class="content-card bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                        <p class="font-bold text-blue-600 mb-2 text-sm">${section.title}</p>
+                                        ${playerHtml}
+                                    </div>`;
+                            }
+                            break;
                     }
                 });
                 pageContent.innerHTML = html;
-                // IMPORTANT: Re-attach listeners and setup logic here
-                // setupAudioListeners();
-                // renderTasbihIfAny(); 
+                
+                // تفعيل مستمعي الأحداث الصوتية بعد تحميل المحتوى
+                setupAudioListeners();
             }
-            
-            // Prayer Times Logic (Standard)
+
             function initPrayerTimes() {
                 const cached = localStorage.getItem('user_location_cache');
                 if (cached) {
@@ -836,31 +1118,136 @@
                 prayerTimesEls.Maghrib.textContent = convertTo12Hour(d.timings.Maghrib);
                 startCountdown(d.timings);
             }
+            function convertTo12Hour(t) {
+                let [h, m] = t.split(':'); h = parseInt(h);
+                return `${h%12||12}:${m} ${h>=12?'م':'ص'}`;
+            }
+            function startCountdown(t) {
+                const order = [{k:'Fajr',n:'الصبح'},{k:'Dhuhr',n:'الظهر'},{k:'Maghrib',n:'المغرب'}];
+                setInterval(() => {
+                    const now = new Date(); let next = null, minDiff = Infinity;
+                    for(let p of order) {
+                        const pt = new Date(); const [h,m] = t[p.k].split(':'); pt.setHours(h,m,0,0);
+                        if(pt>now && pt-now<minDiff) { minDiff=pt-now; next={...p,t:pt}; }
+                    }
+                    if(!next) {
+                        const pt=new Date(); pt.setDate(pt.getDate()+1); const [h,m]=t.Fajr.split(':'); pt.setHours(h,m,0,0);
+                        next={k:'Fajr',n:'الصبح',t:pt}; minDiff=pt-now;
+                    }
+                    nextPrayerName.textContent = next.n;
+                    document.querySelectorAll('.prayer-card').forEach(c=>c.classList.remove('active-prayer'));
+                    if(prayerCards[next.k]) prayerCards[next.k].classList.add('active-prayer');
+                    const h=Math.floor(minDiff/3600000), m=Math.floor((minDiff%3600000)/60000), s=Math.floor((minDiff%60000)/1000);
+                    countdownTimer.textContent=`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                }, 1000);
+            }
+
+            // --- وظائف مشغل الصوت --- //
+            window.toggleAudio = function(id) {
+                const audio = document.getElementById(id);
+                const icon = document.getElementById(`icon-${id}`);
+                const btn = icon.parentElement;
+
+                if (audio.paused) {
+                    document.querySelectorAll('audio').forEach(a => {
+                        if (a.id !== id && a.id !== 'tasbih-click-sound' && !a.paused) {
+                            a.pause();
+                            const otherIcon = document.getElementById(`icon-${a.id}`);
+                            if(otherIcon) otherIcon.textContent = 'play_arrow';
+                            if(otherIcon && otherIcon.parentElement) otherIcon.parentElement.classList.remove('playing');
+                        }
+                    });
+                    audio.play();
+                    icon.textContent = 'pause';
+                    btn.classList.add('playing');
+                } else {
+                    audio.pause();
+                    icon.textContent = 'play_arrow';
+                    btn.classList.remove('playing');
+                }
+            };
+
+            window.seekAudio = function(id, val) {
+                const audio = document.getElementById(id);
+                if(audio.duration) audio.currentTime = audio.duration * (val / 100);
+            };
+
+            function setupAudioListeners() {
+                const audios = document.querySelectorAll('audio');
+                audios.forEach(audio => {
+                    if(audio.id === 'tasbih-click-sound') return;
+                    const id = audio.id;
+                    const seekSlider = document.getElementById(`seek-${id}`);
+                    const currTime = document.getElementById(`curr-${id}`);
+                    const durTime = document.getElementById(`dur-${id}`);
+                    const icon = document.getElementById(`icon-${id}`);
+                    const btn = icon.parentElement;
+
+                    audio.addEventListener('loadedmetadata', () => {
+                        durTime.textContent = formatTime(audio.duration);
+                    });
+                    audio.addEventListener('timeupdate', () => {
+                        if(audio.duration) {
+                            seekSlider.value = (audio.currentTime / audio.duration) * 100;
+                            currTime.textContent = formatTime(audio.currentTime);
+                        }
+                    });
+                    audio.addEventListener('ended', () => {
+                        icon.textContent = 'play_arrow';
+                        btn.classList.remove('playing');
+                        seekSlider.value = 0;
+                        currTime.textContent = "00:00";
+                    });
+                });
+            }
             
-            // Navigation Handlers
+            window.formatTime = function(seconds) {
+                if (isNaN(seconds)) return "00:00";
+                const m = Math.floor(seconds / 60);
+                const s = Math.floor(seconds % 60);
+                return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            };
+
+            // Navigation
             dayButtons.forEach(btn => {
                 btn.addEventListener('click', () => {
-                    // Use full render logic here (merged from previous correct responses)
-                    // For the sake of this fix, assuming you paste the FULL logic back
-                    renderDayPage(btn.getAttribute('data-day'));
+                    const dayName = btn.getAttribute('data-day');
+                    pageTitle.textContent = dayName.includes('ادعية') || dayName.includes('المناجاة') ? dayName : `أعمال يوم ${dayName}`;
+                    renderDayPage(dayName);
                     mainContainer.classList.add('hidden');
                     dayPageContainer.classList.remove('hidden');
-                    setTimeout(()=>dayPageContainer.classList.remove('opacity-0'),50);
+                    setTimeout(() => dayPageContainer.classList.remove('opacity-0'), 50);
+                    window.scrollTo(0, 0);
                 });
             });
+
             backButton.addEventListener('click', () => {
                 dayPageContainer.classList.add('opacity-0');
-                setTimeout(()=>{ dayPageContainer.classList.add('hidden'); mainContainer.classList.remove('hidden'); },300);
+                setTimeout(() => {
+                    dayPageContainer.classList.add('hidden');
+                    mainContainer.classList.remove('hidden');
+                    document.querySelectorAll('audio').forEach(a => { 
+                        if(a.id !== 'tasbih-click-sound') { a.pause(); a.currentTime = 0; }
+                    });
+                }, 300);
+            });
+
+            pageContent.addEventListener('click', (e) => {
+                const btn = e.target.closest('.copy-btn');
+                if (btn) copyToClipboard(btn.getAttribute('data-text'));
             });
             
-            // Audio Toggle Global
-            window.toggleAudio = function(id) {
-                const a = document.getElementById(id);
-                if(a.paused) {
-                    document.querySelectorAll('audio').forEach(x=>{if(x.id!==id)x.pause()});
-                    a.play();
-                } else a.pause();
-            };
+            function copyToClipboard(text) {
+                try {
+                    copyHelper.value = text;
+                    copyHelper.select();
+                    document.execCommand('copy');
+                    copyToast.classList.remove('opacity-0', 'translate-y-5');
+                    setTimeout(() => copyToast.classList.add('opacity-0', 'translate-y-5'), 2000);
+                } catch (e) {}
+            }
+
+            initPrayerTimes();
         });
     </script>
 </body>

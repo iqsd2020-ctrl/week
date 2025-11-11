@@ -275,10 +275,9 @@
                     <span>جاري تحديد الموقع...</span>
                 </div>
 
-                <!-- التاريخ -->
-                <div class="space-y-1">
-                    <h2 id="hijri-date-display" class="text-xl font-bold text-gray-800">-- -- ---- هـ</h2>
-                    <p id="gregorian-date-display" class="text-sm text-gray-500">-- -- ---- م</p>
+                <!-- التاريخ (الهجري فقط) -->
+                <div class="space-y-1 py-2">
+                    <h2 id="hijri-date-display" class="text-2xl font-bold text-gray-800">-- -- ---- هـ</h2>
                 </div>
 
                 <!-- العد التنازلي -->
@@ -417,7 +416,6 @@
             // --- 1. تهيئة المتغيرات ---
             const locationStatus = document.getElementById('location-status');
             const hijriDateDisplay = document.getElementById('hijri-date-display');
-            const gregorianDateDisplay = document.getElementById('gregorian-date-display');
             const countdownTimer = document.getElementById('countdown-timer');
             const nextPrayerName = document.getElementById('next-prayer-name');
             
@@ -455,9 +453,9 @@
                 const lng = position.coords.longitude;
                 const timestamp = Math.floor(Date.now() / 1000);
                 
-                locationStatus.innerHTML = `<span class="material-symbols-rounded text-green-600 text-sm">my_location</span> تم تحديد الموقع`;
+                locationStatus.innerHTML = `<span class="material-symbols-rounded text-base animate-pulse">location_searching</span> جاري جلب اسم المدينة...`;
 
-                // استخدام API Aladhan
+                // 1. جلب أوقات الصلاة
                 const apiUrl = `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${lng}&method=auto`;
 
                 fetch(apiUrl)
@@ -469,19 +467,27 @@
                     })
                     .catch(err => {
                         console.error("Error fetching prayer times:", err);
-                        locationStatus.textContent = "خطأ في جلب البيانات.";
+                    });
+                
+                // 2. جلب اسم المدينة (Reverse Geocoding)
+                fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ar`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const city = data.city || data.locality || data.principalSubdivision || 'موقع غير معروف';
+                        locationStatus.innerHTML = `<span class="material-symbols-rounded text-green-600 text-sm">my_location</span> ${city}`;
+                    })
+                    .catch(() => {
+                        locationStatus.innerHTML = `<span class="material-symbols-rounded text-green-600 text-sm">my_location</span> تم تحديد الموقع`;
                     });
             }
 
             function updateDashboard(data) {
                 const timings = data.timings;
                 const hijri = data.date.hijri;
-                const gregorian = data.date.gregorian;
 
-                // 1. تحديث التاريخ
-                hijriDateDisplay.textContent = `${hijri.day} ${hijri.month.ar} ${hijri.year} هـ`;
-                gregorianDateDisplay.textContent = `${gregorian.weekday.en}, ${gregorian.date}`;
-
+                // 1. تحديث التاريخ (هجري فقط)
+                hijriDateDisplay.textContent = `${hijri.weekday.ar}, ${hijri.day} ${hijri.month.ar} ${hijri.year} هـ`;
+                
                 // 2. تحديث أوقات الصلوات الثلاث (تنسيق 12 ساعة)
                 prayerTimesData = {
                     Fajr: timings.Fajr,

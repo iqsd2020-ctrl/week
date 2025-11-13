@@ -1,15 +1,28 @@
 {
-  "name": "أعمال الأيام",
-  "short_name": "أعمال الأيام",
-  "description": "تطبيق لعرض أعمال أيام الأسبوع",
-  "start_url": "index.html",
+  "name": "لواء الهدى",
+  "short_name": "لواء الهدى",
+  "start_url": ".",
   "display": "standalone",
-  "background_color": "#FFFFFF",
-  "theme_color": "#FFFFFF",
-  "orientation": "portrait-primary",
+  "background_color": "#064e3b",
+  "theme_color": "#064e3b",
+  "orientation": "portrait",
+  "description": "تطبيق لواء الهدى للأدعية والأعمال اليومية",
   "icons": [
-    { "src": "https://i.imgur.com/Ra9c5H4.png", "type": "image/png", "sizes": "192x192" },
-    { "src": "https://i.imgur.com/Ra9c5H4.png", "type": "image/png", "sizes": "512x512" },
-    { "src": "https://i.imgur.com/Ra9c5H4.png", "type": "image/png", "sizes": "1024x1024", "purpose": "maskable" }
+    {
+      "src": "https://i.imgur.com/Ra9c5H4.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.imgur.com/Ra9c5H4.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.imgur.com/Ra9c5H4.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
